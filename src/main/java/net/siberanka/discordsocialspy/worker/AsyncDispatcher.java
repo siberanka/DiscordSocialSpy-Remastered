@@ -10,7 +10,6 @@ import java.util.concurrent.*;
 
 public class AsyncDispatcher {
 
-    // Queue overflow protection: max 2000 entries
     private final BlockingQueue<String> queue = new LinkedBlockingQueue<>(2000);
 
     private final ScheduledExecutorService executor;
@@ -22,10 +21,16 @@ public class AsyncDispatcher {
     private volatile String avatarUrl;
 
     private long lastSendTime = 0;
-    private final long rateLimitMs = 750; // spam protection: 0.75s between posts
+    private final long rateLimitMs = 750;
 
     private final Plugin plugin;
 
+    // OLD CONSTRUCTOR (for compatibility)
+    public AsyncDispatcher(Plugin plugin, String webhook, String prefix) {
+        this(plugin, webhook, prefix, "DiscordSocialSpy", "");
+    }
+
+    // NEW CONSTRUCTOR (full features)
     public AsyncDispatcher(Plugin plugin, String webhook, String prefix, String username, String avatarUrl) {
         this.plugin = plugin;
         this.prefix = prefix;
@@ -34,14 +39,10 @@ public class AsyncDispatcher {
         this.client = HttpClient.newHttpClient();
         this.executor = Executors.newSingleThreadScheduledExecutor();
 
-        setWebhook(webhook); // validate webhook
-
+        setWebhook(webhook);
         executor.submit(this::processQueue);
     }
 
-    /**
-     * Safely add message with overflow protection.
-     */
     public void queue(String msg) {
         if (!queue.offer(msg)) {
             plugin.getLogger().warning("DiscordSocialSpy queue is full! Message dropped: " + msg);
@@ -68,7 +69,6 @@ public class AsyncDispatcher {
 
     private String sanitizeJson(String input) {
         if (input == null) return "";
-
         String sanitized = input;
 
         sanitized = sanitized.replace("\\", "\\\\");
@@ -119,7 +119,6 @@ public class AsyncDispatcher {
 
                         executor.schedule(() -> sendWebhookWithRetry(message, attempt + 1),
                                 delay, TimeUnit.MILLISECONDS);
-
                     }
                 });
     }
