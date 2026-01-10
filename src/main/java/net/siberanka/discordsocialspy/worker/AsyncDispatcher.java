@@ -25,7 +25,7 @@ public class AsyncDispatcher {
 
     private final Plugin plugin;
 
-    // OLD CONSTRUCTOR (for compatibility)
+    // OLD CONSTRUCTOR (backwards compatibility)
     public AsyncDispatcher(Plugin plugin, String webhook, String prefix) {
         this(plugin, webhook, prefix, "DiscordSocialSpy", "");
     }
@@ -88,39 +88,62 @@ public class AsyncDispatcher {
 
         String sanitized = sanitizeJson(prefix + message);
 
-        String json = "{"
-                + "\"username\":\"" + sanitizeJson(username) + "\","
-                + "\"avatar_url\":\"" + sanitizeJson(avatarUrl) + "\","
-                + "\"content\":\"" + sanitized + "\""
-                + "}";
+        // Build JSON dynamically
+        StringBuilder json = new StringBuilder("{");
+        json.append("\"content\":\"").append(sanitized).append("\"");
+
+        if (username != null && !username.isBlank()) {
+            json.append(",\"username\":\"").append(sanitizeJson(username)).append("\"");
+        }
+
+        if (avatarUrl != null && !avatarUrl.isBlank()) {
+            json.append(",\"avatar_url\":\"").append(sanitizeJson(avatarUrl)).append("\"");
+        }
+
+        json.append("}");
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(webhook))
                 .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .header("User-Agent", "DiscordSocialSpy/1.0") // CRITICAL FIX ✔
+                .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
                 .build();
 
-        client.sendAsync(request, HttpResponse.BodyHandlers.discarding())
+        client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .whenComplete((res, ex) -> {
-                    if (ex != null || res.statusCode() >= 400) {
-                        if (attempt >= 3) {
-                            plugin.getLogger().warning("Webhook failed after 3 retries, dropping message: " + message);
-                            return;
-                        }
 
-                        long delay = switch (attempt) {
-                            case 0 -> 1000;
-                            case 1 -> 3000;
-                            default -> 7000;
-                        };
-
-                        plugin.getLogger().warning(
-                                "Webhook failed (attempt " + (attempt + 1) + "), retrying in " + delay + "ms");
-
-                        executor.schedule(() -> sendWebhookWithRetry(message, attempt + 1),
-                                delay, TimeUnit.MILLISECONDS);
+                    if (ex != null || res == null) {
+                        retryOrDrop(message, attempt, "Exception or null response");
+                        return;
                     }
+
+                    int code = res.statusCode();
+
+                    if (code >= 400) {
+                        retryOrDrop(message, attempt, "HTTP " + code);
+                        return;
+                    }
+
+                    // SUCCESS – do nothing
                 });
+    }
+
+    private void retryOrDrop(String message, int attempt, String reason) {
+        if (attempt >= 3) {
+            plugin.getLogger().warning("Webhook failed after retries (" + reason + "). Dropping message: " + message);
+            return;
+        }
+
+        long delay = switch (attempt) {
+            case 0 -> 1000;
+            case 1 -> 3000;
+            default -> 7000;
+        };
+
+        plugin.getLogger().warning("Webhook failed (" + reason + "). Retrying in " + delay + "ms");
+
+        executor.schedule(() -> sendWebhookWithRetry(message, attempt + 1),
+                delay, TimeUnit.MILLISECONDS);
     }
 
     public void setWebhook(String w) {
