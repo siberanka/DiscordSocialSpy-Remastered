@@ -53,11 +53,36 @@ public class AsyncDispatcher {
         } catch (InterruptedException ignored) {}
     }
 
+    /**
+     * Full JSON sanitizer to prevent injection, formatting breaks, and escape exploits.
+     */
+    private String sanitizeJson(String input) {
+        if (input == null) return "";
+
+        String sanitized = input;
+
+        // Escape essential JSON characters
+        sanitized = sanitized.replace("\\", "\\\\");   // Escape backslash
+        sanitized = sanitized.replace("\"", "\\\"");   // Escape double quotes
+        sanitized = sanitized.replace("\n", "\\n");    // Escape newlines
+        sanitized = sanitized.replace("\r", "\\r");    // Escape carriage return
+        sanitized = sanitized.replace("\t", "\\t");    // Escape tabs
+
+        // Remove ASCII control characters (0–31)
+        sanitized = sanitized.replaceAll("[\\x00-\\x1F]", "");
+
+        return sanitized;
+    }
+
     private void sendWebhook(String message) {
         if (webhook == null || webhook.isBlank()) return;
 
         try {
-            String json = "{\"content\":\"" + prefix + message.replace("\"","'") + "\"}";
+            // Apply JSON sanitizer
+            String sanitized = sanitizeJson(prefix + message);
+
+            // Build safe JSON
+            String json = "{\"content\":\"" + sanitized + "\"}";
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(webhook))
