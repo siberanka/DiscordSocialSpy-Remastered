@@ -15,11 +15,13 @@ public class DiscordSocialSpyCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String lbl, String[] args) {
-        if (args.length == 0) return false;
-        if (!args[0].equalsIgnoreCase("reload")) return false;
+        if (args.length == 0 || !args[0].equalsIgnoreCase("reload")) {
+            sender.sendMessage("Usage: /discordsocialspy reload");
+            return true;
+        }
 
         plugin.reload();
-        sender.sendMessage("DiscordSocialSpy reloaded.");
+        sender.sendMessage("DiscordSocialSpy configuration reloaded.");
         return true;
     }
 }
