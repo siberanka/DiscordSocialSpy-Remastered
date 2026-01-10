@@ -1,7 +1,6 @@
 package net.siberanka.discordsocialspy.worker;
 
 import org.bukkit.plugin.Plugin;
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -20,7 +19,6 @@ public class AsyncDispatcher {
     private BlockingQueue<QueueItem> queue;
     private ScheduledExecutorService dispatcherExecutor;
     private ExecutorService senderExecutor;
-
     private HttpClient client;
     private final Plugin plugin;
 
@@ -34,22 +32,11 @@ public class AsyncDispatcher {
     private int retryInterval;
     private int rateLimitWait;
 
-    public AsyncDispatcher(
-            Plugin plugin,
-            int senderThreads,
-            int dispatcherThreads,
-            int queueSize,
-            int maxRetries,
-            int retryInterval,
-            int rateLimitWait
-    ) {
+    public AsyncDispatcher(Plugin plugin, int senderThreads, int dispatcherThreads, int queueSize, int maxRetries, int retryInterval, int rateLimitWait) {
         this.plugin = plugin;
 
-        if (senderThreads == -1)
-            senderThreads = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
-
-        if (dispatcherThreads == -1)
-            dispatcherThreads = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+        if (senderThreads == -1) senderThreads = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+        if (dispatcherThreads == -1) dispatcherThreads = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
 
         this.maxRetries = maxRetries;
         this.retryInterval = retryInterval;
@@ -59,42 +46,32 @@ public class AsyncDispatcher {
         dispatcherExecutor = Executors.newScheduledThreadPool(dispatcherThreads);
         senderExecutor = Executors.newFixedThreadPool(senderThreads);
 
-        client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
-                .executor(senderExecutor)
-                .build();
-
+        client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
         dispatcherExecutor.scheduleAtFixedRate(this::processQueue, 1, 1, TimeUnit.SECONDS);
     }
 
     public void queueMessage(String text) {
+        if (text.length() > 2000) text = text.substring(0, 2000);
         boolean offered = queue.offer(new QueueItem(text));
-        if (!offered) plugin.getLogger().warning("Queue full! Message dropped: " + text);
+        if (!offered) plugin.getLogger().warning("Message queue is full. Some logs are being skipped.");
     }
 
     private void processQueue() {
         try {
             QueueItem item;
             while ((item = queue.poll()) != null) sendMessageAsync(item);
-        } catch (Exception ex) {
-            plugin.getLogger().warning("Queue processing error: " + ex.getMessage());
-        }
+        } catch (Exception ignored) {}
     }
 
     private void sendMessageAsync(QueueItem item) {
-        if (webhook == null || webhook.isBlank()) {
-            plugin.getLogger().warning("Webhook not set!");
-            return;
-        }
 
-        String escapedContent = escapeJson(prefix + item.text);
-        String escapedUsername = escapeJson(username);
-        String escapedAvatar = escapeJson(avatarUrl);
+        if (webhook == null || webhook.isBlank()) return;
 
         String json = "{"
-                + "\"content\":\"" + escapedContent + "\","
-                + "\"username\":\"" + escapedUsername + "\","
-                + "\"avatar_url\":\"" + escapedAvatar + "\""
+                + "\"content\":\"" + escapeJson(prefix + item.text) + "\","
+                + "\"username\":\"" + escapeJson(username) + "\","
+                + "\"avatar_url\":\"" + escapeJson(avatarUrl) + "\","
+                + "\"allowed_mentions\":{\"parse\":[]}"
                 + "}";
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -105,19 +82,19 @@ public class AsyncDispatcher {
                 .build();
 
         client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenAccept(response -> handleResponse(response, item))
-                .exceptionally(ex -> {
-                    plugin.getLogger().warning("Send error: " + ex.getMessage());
-                    retryMessage(item);
-                    return null;
+                .whenComplete((response, ex) -> {
+                    if (ex != null) {
+                        retryMessage(item);
+                        return;
+                    }
+                    handleResponse(response, item);
                 });
     }
 
     private String escapeJson(String s) {
         if (s == null) return "";
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
+        for (char c : s.toCharArray()) {
             switch (c) {
                 case '"': sb.append("\\\""); break;
                 case '\\': sb.append("\\\\"); break;
@@ -126,9 +103,7 @@ public class AsyncDispatcher {
                 case '\n': sb.append("\\n"); break;
                 case '\r': sb.append("\\r"); break;
                 case '\t': sb.append("\\t"); break;
-                default:
-                    if (c < 32) sb.append(String.format("\\u%04x", (int) c));
-                    else sb.append(c);
+                default: sb.append(c);
             }
         }
         return sb.toString();
@@ -137,42 +112,29 @@ public class AsyncDispatcher {
     private void handleResponse(HttpResponse<String> response, QueueItem item) {
         int status = response.statusCode();
 
-        if (status == 204 || status == 200) {
+        if (status == 200 || status == 204) {
             lastErrorCode = -1;
             return;
         }
 
         if (status == 429) {
-            if (lastErrorCode != status) {
-                plugin.getLogger().warning("Rate limit hit. Retrying...");
-                lastErrorCode = status;
-            }
+            lastErrorCode = status;
             dispatcherExecutor.schedule(() -> retryMessage(item), rateLimitWait, TimeUnit.SECONDS);
             return;
         }
 
         if (status == 400) {
-            if (lastErrorCode != status) {
-                plugin.getLogger().warning("Invalid JSON. Dropping: " + item.text);
-                lastErrorCode = status;
-            }
+            lastErrorCode = status;
             return;
         }
 
-        if (lastErrorCode != status) {
-            plugin.getLogger().warning("HTTP " + status + ": " + response.body());
-            lastErrorCode = status;
-        }
-
+        lastErrorCode = status;
         retryMessage(item);
     }
 
     private void retryMessage(QueueItem item) {
         item.attempts++;
-        if (item.attempts > maxRetries) {
-            plugin.getLogger().warning("Message dropped after retries: " + item.text);
-            return;
-        }
+        if (item.attempts > maxRetries) return;
         dispatcherExecutor.schedule(() -> queue.offer(item), retryInterval, TimeUnit.SECONDS);
     }
 
