@@ -1,0 +1,13 @@
+webhook: "PUT_YOUR_DISCORD_WEBHOOK_URL_HERE"
+
+# Which commands to log
+logged-commands:
+  - msg
+  - tell
+  - w
+
+# Players with this permission will NOT be logged
+exclude-permission: "discordspy.bypass"
+
+# Prefix added to each webhook log message
+prefix: "[Spy] "

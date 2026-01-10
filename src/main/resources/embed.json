@@ -1,0 +1,22 @@
+{
+  "embeds": [
+    {
+      "title": "Social Spy (%group_name%)",
+      "color": 16716372,
+      "timestamp": "%timestamp%",
+      "thumbnail": {
+        "url": "https://api.mineatar.io/face/%sender_uuid%?scale=12"
+      },
+      "fields": [
+        {
+          "name": "%sender_username% executed the command:",
+          "value": "/%full_command%",
+          "inline": true
+        }
+      ],
+      "footer": {
+        "text": "%plugin_name% %plugin_version%"
+      }
+    }
+  ]
+}
