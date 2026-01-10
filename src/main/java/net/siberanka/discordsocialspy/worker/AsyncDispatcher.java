@@ -15,17 +15,22 @@ public class AsyncDispatcher {
 
     private final ExecutorService executor;
     private final HttpClient client;
+
     private volatile String webhook;
     private volatile String prefix;
+    private volatile String username;
+    private volatile String avatarUrl;
 
     private long lastSendTime = 0;
     private final long rateLimitMs = 750; // spam protection: 0.75s between posts
 
     private final Plugin plugin;
 
-    public AsyncDispatcher(Plugin plugin, String webhook, String prefix) {
+    public AsyncDispatcher(Plugin plugin, String webhook, String prefix, String username, String avatarUrl) {
         this.plugin = plugin;
         this.prefix = prefix;
+        this.username = username;
+        this.avatarUrl = avatarUrl;
         this.client = HttpClient.newHttpClient();
         this.executor = Executors.newSingleThreadExecutor();
 
@@ -69,7 +74,6 @@ public class AsyncDispatcher {
 
         String sanitized = input;
 
-        // Escape essential JSON characters
         sanitized = sanitized.replace("\\", "\\\\");
         sanitized = sanitized.replace("\"", "\\\"");
         sanitized = sanitized.replace("\n", "\\n");
@@ -90,7 +94,12 @@ public class AsyncDispatcher {
         if (webhook == null) return;
 
         String sanitized = sanitizeJson(prefix + message);
-        String json = "{\"content\":\"" + sanitized + "\"}";
+
+        String json = "{"
+                + "\"username\":\"" + sanitizeJson(username) + "\","
+                + "\"avatar_url\":\"" + sanitizeJson(avatarUrl) + "\","
+                + "\"content\":\"" + sanitized + "\""
+                + "}";
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(webhook))
@@ -127,7 +136,6 @@ public class AsyncDispatcher {
             return;
         }
 
-        // Discord webhook format validation
         if (!w.startsWith("https://discord.com/api/webhooks/")) {
             this.webhook = null;
             plugin.getLogger().warning("Invalid webhook URL format! Webhook disabled: " + w);
@@ -139,6 +147,14 @@ public class AsyncDispatcher {
 
     public void setPrefix(String p) {
         this.prefix = p;
+    }
+
+    public void setUsername(String u) {
+        this.username = u;
+    }
+
+    public void setAvatarUrl(String a) {
+        this.avatarUrl = a;
     }
 
     public void shutdown() {
