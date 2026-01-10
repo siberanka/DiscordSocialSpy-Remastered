@@ -1,8 +1,21 @@
 name: DiscordSocialSpy
-version: 3.0
+version: 1.2
 main: net.siberanka.discordsocialspy.DiscordSocialSpyPlugin
 api-version: 1.16
+
 commands:
   discordsocialspy:
-    description: Reload the plugin
-    usage: /discordsocialspy reload
+    description: Main command for DiscordSocialSpy
+    usage: /discordsocialspy <reload|cmd>
+    permission: discordsocialspy.use
+    aliases: [dss]
+
+permissions:
+  discordsocialspy.use:
+    default: op
+
+  discordsocialspy.reload:
+    default: op
+
+  discordsocialspy.cmd:
+    default: op
