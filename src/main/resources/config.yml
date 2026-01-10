@@ -1,5 +1,6 @@
 webhook: "PUT_YOUR_DISCORD_WEBHOOK_URL_HERE"
-
+username: "DiscordSocialSpy"
+avatar_url: "https://example.com/icon.png"
 # Which commands to log
 logged-commands:
   - msg
