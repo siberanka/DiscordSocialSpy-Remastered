@@ -10,7 +10,9 @@ import java.util.concurrent.*;
 
 public class AsyncDispatcher {
 
-    private final BlockingQueue<String> queue = new LinkedBlockingQueue<>();
+    // Queue overflow protection: max 2000 entries
+    private final BlockingQueue<String> queue = new LinkedBlockingQueue<>(2000);
+
     private final ExecutorService executor;
     private final HttpClient client;
     private volatile String webhook;
@@ -23,16 +25,22 @@ public class AsyncDispatcher {
 
     public AsyncDispatcher(Plugin plugin, String webhook, String prefix) {
         this.plugin = plugin;
-        this.webhook = webhook;
         this.prefix = prefix;
         this.client = HttpClient.newHttpClient();
         this.executor = Executors.newSingleThreadExecutor();
 
+        setWebhook(webhook); // validate webhook
+
         executor.submit(this::processQueue);
     }
 
+    /**
+     * Safely add message with overflow protection.
+     */
     public void queue(String msg) {
-        queue.add(msg);
+        if (!queue.offer(msg)) {
+            plugin.getLogger().warning("DiscordSocialSpy queue is full! Message dropped: " + msg);
+        }
     }
 
     private void processQueue() {
@@ -47,7 +55,7 @@ public class AsyncDispatcher {
                     Thread.sleep(rateLimitMs - diff);
                 }
 
-                sendWebhook(msg);
+                sendWebhookWithRetry(msg, 0);
                 lastSendTime = System.currentTimeMillis();
             }
         } catch (InterruptedException ignored) {}
@@ -62,11 +70,11 @@ public class AsyncDispatcher {
         String sanitized = input;
 
         // Escape essential JSON characters
-        sanitized = sanitized.replace("\\", "\\\\");   // Escape backslash
-        sanitized = sanitized.replace("\"", "\\\"");   // Escape double quotes
-        sanitized = sanitized.replace("\n", "\\n");    // Escape newlines
-        sanitized = sanitized.replace("\r", "\\r");    // Escape carriage return
-        sanitized = sanitized.replace("\t", "\\t");    // Escape tabs
+        sanitized = sanitized.replace("\\", "\\\\");
+        sanitized = sanitized.replace("\"", "\\\"");
+        sanitized = sanitized.replace("\n", "\\n");
+        sanitized = sanitized.replace("\r", "\\r");
+        sanitized = sanitized.replace("\t", "\\t");
 
         // Remove ASCII control characters (0–31)
         sanitized = sanitized.replaceAll("[\\x00-\\x1F]", "");
@@ -74,34 +82,58 @@ public class AsyncDispatcher {
         return sanitized;
     }
 
-    private void sendWebhook(String message) {
-        if (webhook == null || webhook.isBlank()) return;
+    /**
+     * Retry / backoff system for webhook failures.
+     */
+    private void sendWebhookWithRetry(String message, int attempt) {
 
-        try {
-            // Apply JSON sanitizer
-            String sanitized = sanitizeJson(prefix + message);
+        if (webhook == null) return;
 
-            // Build safe JSON
-            String json = "{\"content\":\"" + sanitized + "\"}";
+        String sanitized = sanitizeJson(prefix + message);
+        String json = "{\"content\":\"" + sanitized + "\"}";
 
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(webhook))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(json))
-                    .build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(webhook))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .build();
 
-            client.sendAsync(request, HttpResponse.BodyHandlers.discarding())
-                    .exceptionally(ex -> {
-                        plugin.getLogger().warning("Async webhook failed: " + ex.getMessage());
-                        return null;
-                    });
+        client.sendAsync(request, HttpResponse.BodyHandlers.discarding())
+                .whenComplete((res, ex) -> {
+                    if (ex != null || res.statusCode() >= 400) {
+                        if (attempt >= 3) {
+                            plugin.getLogger().warning("Webhook failed after 3 retries, dropping message: " + message);
+                            return;
+                        }
 
-        } catch (Exception e) {
-            plugin.getLogger().warning("Webhook error: " + e.getMessage());
-        }
+                        long backoffDelay = (attempt == 0 ? 1000 : attempt == 1 ? 3000 : 7000);
+
+                        plugin.getLogger().warning(
+                                "Webhook failed (attempt " + (attempt + 1) + "), retrying in " + backoffDelay + "ms");
+
+                        executor.schedule(() -> sendWebhookWithRetry(message, attempt + 1),
+                                backoffDelay, TimeUnit.MILLISECONDS);
+                    }
+                });
     }
 
+    /**
+     * Validate webhook format before setting.
+     */
     public void setWebhook(String w) {
+        if (w == null || w.isBlank()) {
+            this.webhook = null;
+            plugin.getLogger().warning("Webhook disabled: empty or null URL.");
+            return;
+        }
+
+        // Discord webhook format validation
+        if (!w.startsWith("https://discord.com/api/webhooks/")) {
+            this.webhook = null;
+            plugin.getLogger().warning("Invalid webhook URL format! Webhook disabled: " + w);
+            return;
+        }
+
         this.webhook = w;
     }
 
