@@ -1,14 +1,123 @@
+############################################################
+#                    DISCORD SOCIAL SPY                    #
+############################################################
+
+# ----------------------------------------------------------
+# Webhook URL
+# ----------------------------------------------------------
+# TR: Discord webhook URL’nizi buraya yazın.
+# EN: Put your Discord webhook URL here.
 webhook: "PUT_YOUR_DISCORD_WEBHOOK_URL_HERE"
+
+# ----------------------------------------------------------
+# Username Override
+# ----------------------------------------------------------
+# TR: Discord’da gözükecek kullanıcı adını belirler.
+# EN: Sets the username that will appear in Discord.
 username: "SocialSpy"
+
+# ----------------------------------------------------------
+# Avatar URL
+# ----------------------------------------------------------
+# TR: Discord’da mesaj atan kullanıcının avatar URL'si.
+# EN: URL of the avatar displayed in Discord messages.
 avatar_url: "https://www.spigotmc.org/data/resource_icons/131/131648.jpg"
-# Which commands to log
+
+# ----------------------------------------------------------
+# Prefix
+# ----------------------------------------------------------
+# TR: Her mesajın başına eklenen bir prefix.
+# EN: Prefix added to each logged message.
+prefix: "[Spy] "
+
+
+############################################################
+#                    COMMAND FILTERING                     #
+############################################################
+
+# ----------------------------------------------------------
+# Logged Commands
+# ----------------------------------------------------------
+# TR: Discord’a gönderilecek komutları listeleyin.
+#     Sadece listedeki komutlar loglanır (/msg, /tell, /w vb.)
+#
+# EN: Commands that will be logged and sent to Discord.
+#     Only listed commands will be captured (/msg, /tell, /w etc.)
 logged-commands:
   - msg
   - tell
   - w
 
-# Players with this permission will NOT be logged
+# ----------------------------------------------------------
+# Excluded Permission
+# ----------------------------------------------------------
+# TR: Bu izne sahip oyuncular loglanmaz.
+# EN: Players with this permission will NOT be logged.
 exclude-permission: "discordspy.bypass"
 
-# Prefix added to each webhook log message
-prefix: "[Spy] "
+
+############################################################
+#                        ASYNC SETTINGS                    #
+############################################################
+
+async:
+  # --------------------------------------------------------
+  # Sender Threads
+  # --------------------------------------------------------
+  # TR: Discord’a mesaj göndermek için kullanılacak thread sayısı.
+  #     -1: CPU çekirdeklerinin yarısı kullanılır.
+  #     Örnek: 4 çekirdek → 2 thread
+  #
+  # EN: Number of threads used for sending messages to Discord.
+  #     -1: Uses half of available CPU cores.
+  #     Example: 4 cores → 2 threads
+  sender_threads: -1
+
+  # --------------------------------------------------------
+  # Dispatcher Threads
+  # --------------------------------------------------------
+  # TR: Kuyruğu işleyen thread sayısı.
+  #     -1: CPU çekirdeklerinin yarısı kullanılır.
+  #
+  # EN: Number of threads used for queue processing.
+  #     -1: Uses half of available CPU cores.
+  dispatcher_threads: -1
+
+  # --------------------------------------------------------
+  # Queue Size
+  # --------------------------------------------------------
+  # TR: Bekleyen mesajların maksimum sayısı.
+  #     Kuyruk dolarsa eski mesajlar düşer.
+  #
+  # EN: Maximum number of queued messages.
+  #     When full, new messages will be dropped.
+  queue_size: 5000
+
+  # --------------------------------------------------------
+  # Maximum Retries
+  # --------------------------------------------------------
+  # TR: Mesaj gönderimi başarısız olursa kaç kez tekrar denensin?
+  #     0 = tekrar deneme yok
+  #     3 = önerilen değer
+  #
+  # EN: How many times should message sending be retried?
+  #     0 = no retry
+  #     3 = recommended
+  max_retries: 3
+
+  # --------------------------------------------------------
+  # Retry Interval
+  # --------------------------------------------------------
+  # TR: Retry denemeleri arasında kaç saniye beklensin.
+  # EN: Seconds to wait between retry attempts.
+  retry_interval: 2
+
+  # --------------------------------------------------------
+  # Rate Limit Wait Time
+  # --------------------------------------------------------
+  # TR: Discord rate limit hatası (429) alındığında kaç saniye beklenmeli?
+  #     (Discord genelde 2-5 saniye ister)
+  #
+  # EN: Seconds to wait after Discord rate-limit error (429).
+  #     (Discord usually requires 2–5 seconds)
+  rate_limit_wait: 3
