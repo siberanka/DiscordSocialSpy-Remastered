@@ -25,12 +25,12 @@ public class AsyncDispatcher {
 
     private final Plugin plugin;
 
-    // OLD CONSTRUCTOR (backwards compatibility)
+    // Old constructor (backwards compatibility)
     public AsyncDispatcher(Plugin plugin, String webhook, String prefix) {
-        this(plugin, webhook, prefix, "DiscordSocialSpy", "");
+        this(plugin, webhook, prefix, "", "");
     }
 
-    // NEW CONSTRUCTOR (full features)
+    // Full constructor
     public AsyncDispatcher(Plugin plugin, String webhook, String prefix, String username, String avatarUrl) {
         this.plugin = plugin;
         this.prefix = prefix;
@@ -45,7 +45,7 @@ public class AsyncDispatcher {
 
     public void queue(String msg) {
         if (!queue.offer(msg)) {
-            plugin.getLogger().warning("DiscordSocialSpy queue is full! Message dropped: " + msg);
+            plugin.getLogger().warning("[DiscordSocialSpy] Queue full, message dropped.");
         }
     }
 
@@ -69,14 +69,13 @@ public class AsyncDispatcher {
 
     private String sanitizeJson(String input) {
         if (input == null) return "";
-        String sanitized = input;
 
+        String sanitized = input;
         sanitized = sanitized.replace("\\", "\\\\");
         sanitized = sanitized.replace("\"", "\\\"");
         sanitized = sanitized.replace("\n", "\\n");
         sanitized = sanitized.replace("\r", "\\r");
         sanitized = sanitized.replace("\t", "\\t");
-
         sanitized = sanitized.replaceAll("[\\x00-\\x1F]", "");
 
         return sanitized;
@@ -88,16 +87,20 @@ public class AsyncDispatcher {
 
         String sanitized = sanitizeJson(prefix + message);
 
-        // Build JSON dynamically
+        // Build JSON dynamically based on Discord rules
         StringBuilder json = new StringBuilder("{");
+
+        // Always required
         json.append("\"content\":\"").append(sanitized).append("\"");
 
+        // username only if not blank
         if (username != null && !username.isBlank()) {
             json.append(",\"username\":\"").append(sanitizeJson(username)).append("\"");
-        }
 
-        if (avatarUrl != null && !avatarUrl.isBlank()) {
-            json.append(",\"avatar_url\":\"").append(sanitizeJson(avatarUrl)).append("\"");
+            // avatar_url only valid if username is also present
+            if (avatarUrl != null && !avatarUrl.isBlank()) {
+                json.append(",\"avatar_url\":\"").append(sanitizeJson(avatarUrl)).append("\"");
+            }
         }
 
         json.append("}");
@@ -105,18 +108,20 @@ public class AsyncDispatcher {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(webhook))
                 .header("Content-Type", "application/json")
-                .header("User-Agent", "DiscordSocialSpy/1.0") // CRITICAL FIX ✔
+                .header("User-Agent", "DiscordSocialSpy/1.0") // Critical fix
                 .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
                 .build();
 
         client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .whenComplete((res, ex) -> {
 
+                    // Null or exception: retry
                     if (ex != null || res == null) {
-                        retryOrDrop(message, attempt, "Exception or null response");
+                        retryOrDrop(message, attempt, "Null response or exception");
                         return;
                     }
 
+                    // HTTP error code
                     int code = res.statusCode();
 
                     if (code >= 400) {
@@ -124,23 +129,23 @@ public class AsyncDispatcher {
                         return;
                     }
 
-                    // SUCCESS – do nothing
+                    // SUCCESS → stop retrying
                 });
     }
 
     private void retryOrDrop(String message, int attempt, String reason) {
         if (attempt >= 3) {
-            plugin.getLogger().warning("Webhook failed after retries (" + reason + "). Dropping message: " + message);
+            plugin.getLogger().warning("[DiscordSocialSpy] Dropped message after retries (" + reason + ")");
             return;
         }
 
         long delay = switch (attempt) {
-            case 0 -> 1000;
-            case 1 -> 3000;
-            default -> 7000;
+            case 0 -> 1000;  // 1s
+            case 1 -> 3000;  // 3s
+            default -> 7000; // 7s
         };
 
-        plugin.getLogger().warning("Webhook failed (" + reason + "). Retrying in " + delay + "ms");
+        plugin.getLogger().warning("[DiscordSocialSpy] Webhook failed (" + reason + "). Retrying in " + delay + "ms");
 
         executor.schedule(() -> sendWebhookWithRetry(message, attempt + 1),
                 delay, TimeUnit.MILLISECONDS);
@@ -149,13 +154,13 @@ public class AsyncDispatcher {
     public void setWebhook(String w) {
         if (w == null || w.isBlank()) {
             this.webhook = null;
-            plugin.getLogger().warning("Webhook disabled: empty or null URL.");
+            plugin.getLogger().warning("[DiscordSocialSpy] Webhook disabled (empty)");
             return;
         }
 
         if (!w.startsWith("https://discord.com/api/webhooks/")) {
             this.webhook = null;
-            plugin.getLogger().warning("Invalid webhook URL format! Webhook disabled: " + w);
+            plugin.getLogger().warning("[DiscordSocialSpy] Invalid webhook URL, disabled: " + w);
             return;
         }
 
