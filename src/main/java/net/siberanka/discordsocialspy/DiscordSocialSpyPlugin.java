@@ -9,7 +9,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.entity.Player;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
@@ -24,7 +27,6 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
 
-        // Validate / repair config before loading
         validateAndRepairConfig();
 
         reloadConfig();
@@ -69,21 +71,22 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
         avatarUrl = getConfig().getString("avatar_url", "");
     }
 
+
     /**
      * CONFIG SELF-REPAIR SYSTEM
-     * - If YAML is corrupted → rename and regenerate
-     * - If missing keys → auto-fill missing defaults
+     * - If YAML broken: rename and regenerate new config
+     * - If missing keys: patch missing keys in correct order
+     * - Always append last update timestamp
      */
     private void validateAndRepairConfig() {
 
         File configFile = new File(getDataFolder(), "config.yml");
 
-        // 1) YAML parse check
+        // 1) YAML parse validation
         try {
             getConfig();
         } catch (Exception ex) {
-
-            getLogger().warning("Config is corrupted! Creating backup and regenerating fresh config.yml...");
+            getLogger().warning("Config is corrupted! Creating backup and regenerating default config.yml...");
 
             File backup = new File(getDataFolder(),
                     "corrupted-config-" + System.currentTimeMillis() + ".yml");
@@ -92,26 +95,63 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
 
             saveDefaultConfig();
             reloadConfig();
+
+            appendTimestamp(configFile);
             return;
         }
 
-        // 2) Fill missing defaults automatically
-        getConfig().addDefault("webhook", "");
-        getConfig().addDefault("prefix", "[Spy] ");
-        getConfig().addDefault("logged-commands", Arrays.asList("msg", "tell", "w"));
-        getConfig().addDefault("exclude-permission", "discordsocialspy.ignore");
-        getConfig().addDefault("username", "DiscordSocialSpy");
-        getConfig().addDefault("avatar_url", "");
+        // 2) Fix missing values (but preserve the existing values)
+        boolean modified = false;
 
+        modified |= addDefaultIfMissing("webhook", "");
+        modified |= addDefaultIfMissing("prefix", "[Spy] ");
+        modified |= addDefaultIfMissing("logged-commands", Arrays.asList("msg", "tell", "w"));
+        modified |= addDefaultIfMissing("exclude-permission", "discordsocialspy.ignore");
+        modified |= addDefaultIfMissing("username", "DiscordSocialSpy");
+        modified |= addDefaultIfMissing("avatar_url", "");
+
+        // If nothing changed, stop
+        if (!modified) return;
+
+        // Copy defaults and save
         getConfig().options().copyDefaults(true);
         saveConfig();
+
+        appendTimestamp(configFile);
     }
+
+
+    /**
+     * Add missing config key and return true if modified
+     */
+    private boolean addDefaultIfMissing(String key, Object value) {
+        if (!getConfig().isSet(key)) {
+            getConfig().addDefault(key, value);
+            return true;
+        }
+        return false;
+    }
+
+
+    /**
+     * Append last edit timestamp at end of config.yml
+     */
+    private void appendTimestamp(File configFile) {
+        try {
+            FileWriter writer = new FileWriter(configFile, true);
+            String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+            writer.write("\n# last-fixed: " + date + "\n");
+            writer.close();
+        } catch (Exception e) {
+            getLogger().warning("Failed to write last-fixed timestamp: " + e.getMessage());
+        }
+    }
+
 
     @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
 
-        // Skip players with bypass permission
         if (excludedPermission != null && !excludedPermission.isBlank()) {
             if (player.hasPermission(excludedPermission)) {
                 return;
@@ -119,11 +159,8 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
         }
 
         String fullMessage = event.getMessage().toLowerCase();
-
-        // Extract base command without "/" and without arguments
         String baseCommand = fullMessage.split(" ")[0].substring(1);
 
-        // Exact match check
         for (String cmd : filteredCommands) {
             if (baseCommand.equalsIgnoreCase(cmd)) {
                 dispatcher.queue(player.getName() + ": " + event.getMessage());
