@@ -34,7 +34,7 @@ prefix: "[Spy] "
 | `/discordsocialspy reload` | Reloads configuration |
 
 ### Requirements
-- Paper 1.21.8+
+- Paper 1.16+
 - Java 21
 
 ---
@@ -73,14 +73,5 @@ prefix: "[Spy] "
 | `/discordsocialspy reload` | Ayarları yeniler |
 
 ### Gereksinimler
-- Paper 1.21.8+
+- Paper 1.16+
 - Java 21
-
----
-
-## 📥 Download
-
-You can download the latest ZIP build here:
-
-**[DiscordSocialSpyAsyncAdvanced.zip](sandbox:/mnt/data/DiscordSocialSpyAsyncAdvanced.zip)**
-
