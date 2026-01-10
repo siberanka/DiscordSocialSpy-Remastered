@@ -13,7 +13,7 @@ public class AsyncDispatcher {
     // Queue overflow protection: max 2000 entries
     private final BlockingQueue<String> queue = new LinkedBlockingQueue<>(2000);
 
-    private final ExecutorService executor;
+    private final ScheduledExecutorService executor;
     private final HttpClient client;
 
     private volatile String webhook;
@@ -32,7 +32,7 @@ public class AsyncDispatcher {
         this.username = username;
         this.avatarUrl = avatarUrl;
         this.client = HttpClient.newHttpClient();
-        this.executor = Executors.newSingleThreadExecutor();
+        this.executor = Executors.newSingleThreadScheduledExecutor();
 
         setWebhook(webhook); // validate webhook
 
@@ -66,9 +66,6 @@ public class AsyncDispatcher {
         } catch (InterruptedException ignored) {}
     }
 
-    /**
-     * Full JSON sanitizer to prevent injection, formatting breaks, and escape exploits.
-     */
     private String sanitizeJson(String input) {
         if (input == null) return "";
 
@@ -80,15 +77,11 @@ public class AsyncDispatcher {
         sanitized = sanitized.replace("\r", "\\r");
         sanitized = sanitized.replace("\t", "\\t");
 
-        // Remove ASCII control characters (0–31)
         sanitized = sanitized.replaceAll("[\\x00-\\x1F]", "");
 
         return sanitized;
     }
 
-    /**
-     * Retry / backoff system for webhook failures.
-     */
     private void sendWebhookWithRetry(String message, int attempt) {
 
         if (webhook == null) return;
@@ -115,20 +108,22 @@ public class AsyncDispatcher {
                             return;
                         }
 
-                        long backoffDelay = (attempt == 0 ? 1000 : attempt == 1 ? 3000 : 7000);
+                        long delay = switch (attempt) {
+                            case 0 -> 1000;
+                            case 1 -> 3000;
+                            default -> 7000;
+                        };
 
                         plugin.getLogger().warning(
-                                "Webhook failed (attempt " + (attempt + 1) + "), retrying in " + backoffDelay + "ms");
+                                "Webhook failed (attempt " + (attempt + 1) + "), retrying in " + delay + "ms");
 
                         executor.schedule(() -> sendWebhookWithRetry(message, attempt + 1),
-                                backoffDelay, TimeUnit.MILLISECONDS);
+                                delay, TimeUnit.MILLISECONDS);
+
                     }
                 });
     }
 
-    /**
-     * Validate webhook format before setting.
-     */
     public void setWebhook(String w) {
         if (w == null || w.isBlank()) {
             this.webhook = null;
