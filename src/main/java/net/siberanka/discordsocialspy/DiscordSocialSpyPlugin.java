@@ -53,17 +53,21 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
     public void onCommand(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
 
-        // Skip players with permission
+        // Skip players with bypass permission
         if (excludedPermission != null && !excludedPermission.isBlank()) {
             if (player.hasPermission(excludedPermission)) {
                 return;
             }
         }
 
-        String msg = event.getMessage().toLowerCase();
+        String fullMessage = event.getMessage().toLowerCase();
 
+        // Extract base command without "/" and without arguments
+        String baseCommand = fullMessage.split(" ")[0].substring(1);
+
+        // Check if the base command exactly matches one of the filtered commands
         for (String cmd : filteredCommands) {
-            if (msg.startsWith("/" + cmd.toLowerCase())) {
+            if (baseCommand.equalsIgnoreCase(cmd)) {
                 dispatcher.queue(player.getName() + ": " + event.getMessage());
                 return;
             }
