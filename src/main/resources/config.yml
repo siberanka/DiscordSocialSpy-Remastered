@@ -1,5 +1,5 @@
 webhook: "PUT_YOUR_DISCORD_WEBHOOK_URL_HERE"
-username: "DiscordSocialSpy"
+username: "SocialSpy"
 avatar_url: "https://www.spigotmc.org/data/resource_icons/131/131648.jpg"
 # Which commands to log
 logged-commands:
