@@ -17,9 +17,7 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         saveDefaultConfig();
-
         new ConfigAutoUpdater(this).updateConfig();
-
         reloadConfig();
 
         int senderThreads = getConfig().getInt("async.sender_threads");
