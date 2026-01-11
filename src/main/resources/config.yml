@@ -5,161 +5,85 @@
 # ----------------------------------------------------------
 # Language / Dil
 # ----------------------------------------------------------
-# TR: Pluginin kullanacağı dil dosyası.
-#     en = İngilizce
-#     tr = Türkçe
-#     Bu ayarı değiştirdikten sonra /discordsocialspy reload yapın.
-#
-# EN: Language file used by the plugin.
-#     en = English
-#     tr = Turkish
-#     Run /discordsocialspy reload after changing this setting.
 language: "en"
 
 # ----------------------------------------------------------
 # Webhook URL
 # ----------------------------------------------------------
-# TR: Discord webhook URL’nizi buraya yazın.
-#     Geçerli bir webhook adresi olmadan mesajlar gönderilemez.
-#
-# EN: Put your Discord webhook URL here.
-#     Messages will not send if this value is empty.
 webhook: "PUT_YOUR_DISCORD_WEBHOOK_URL_HERE"
 
 # ----------------------------------------------------------
 # Username Override
 # ----------------------------------------------------------
-# TR: Discord’da gözükecek kullanıcı adını belirler.
-#     Boş bırakılırsa Discord varsayılan kullanıcı adını kullanır.
-#
-# EN: Username displayed in Discord messages.
-#     If left empty, Discord will use its default name.
 username: "SocialSpy"
 
 # ----------------------------------------------------------
 # Avatar URL
 # ----------------------------------------------------------
-# TR: Discord’da mesaj atan kullanıcının avatar URL'si.
-#     PNG, JPG ve GIF desteklenir.
-#
-# EN: URL of the avatar shown in Discord messages.
-#     Accepts PNG, JPG, GIF.
 avatar_url: "https://www.spigotmc.org/data/resource_icons/131/131648.jpg"
 
 # ----------------------------------------------------------
-# Prefix
+# Prefix (Logged Messages)
 # ----------------------------------------------------------
-# TR: Her mesajın başına eklenen bir metin.
-#     Örnek: [Spy] Oyuncu1: /msg Oyuncu2 Merhaba
-#
-# EN: Prefix added to every logged message.
-#     Example: [Spy] Player1: /msg Player2 Hello
 prefix: "[Spy] "
 
-
-############################################################
-#                    COMMAND FILTERING                     #
-############################################################
+# ----------------------------------------------------------
+# Message Prefix (In-Game / Console)
+# ----------------------------------------------------------
+message-prefix: "[DSS] "
 
 # ----------------------------------------------------------
-# Logged Commands
+# Sign Prefix (Discord / Console)
 # ----------------------------------------------------------
-# TR: Discord’a gönderilecek komutları listeleyin.
-#     Sadece listedeki komutlar loglanır (/msg, /tell, /w vb.)
-#     Örneğin oyuncu /msg yazarsa Discord'a gönderilir.
+sign-prefix: "[Sign] "
+
+# ----------------------------------------------------------
+# Sign Webhook
+# ----------------------------------------------------------
+# TR: Tabelaların gönderileceği özel webhook adresi.
+#     Boş bırakılırsa ana webhook kullanılır.
 #
-# EN: Commands to capture and send to Discord.
-#     Only commands listed here will be logged (/msg, /tell, /w etc.)
-#     For example, /msg executed by a player will be logged.
+# EN: Custom webhook for sign messages.
+#     If empty, main webhook is used.
+sign-webhook: ""
+
+
+############################################################
+#                    COMMAND FILTERING                     
+############################################################
+
 logged-commands:
   - msg
   - tell
   - w
 
-# ----------------------------------------------------------
-# Excluded Permission
-# ----------------------------------------------------------
-# TR: Bu izne sahip oyuncular loglanmaz.
-#     Moderatörler veya yöneticiler için bypass izni olarak kullanılır.
-#
-# EN: Players with this permission will NOT be logged.
-#     Useful for staff members or admins.
 exclude-permission: "discordspy.bypass"
 
 
 ############################################################
-#                        ASYNC SETTINGS                    #
+#                        ASYNC SETTINGS                    
 ############################################################
 
 async:
-  # --------------------------------------------------------
-  # Sender Threads
-  # --------------------------------------------------------
-  # TR: Discord’a mesaj göndermek için kullanılan thread sayısı.
-  #     -1: Sunucu CPU çekirdeklerinin yarısını kullanır.
-  #     Çok yüksek değer sunucu CPU kullanımını artırabilir.
-  #
-  # EN: Number of threads used for sending messages to Discord.
-  #     -1: Uses half of available CPU cores.
-  #     Setting too high can increase CPU usage.
   sender_threads: -1
-
-  # --------------------------------------------------------
-  # Dispatcher Threads
-  # --------------------------------------------------------
-  # TR: Kuyruğu işleyen thread sayısı.
-  #     Bu değer message kuyruk hızını belirler.
-  #
-  # EN: Number of threads used to process the message queue.
-  #     Controls how fast queued messages are sent out.
   dispatcher_threads: -1
-
-  # --------------------------------------------------------
-  # Queue Size
-  # --------------------------------------------------------
-  # TR: Henüz gönderilmemiş mesajların maksimum sayısı.
-  #     Sunucu çok fazla komut loglarsa kuyruğun dolmasını engeller.
-  #
-  # EN: Maximum number of queued messages not yet sent.
-  #     Prevents memory overload on very busy servers.
   queue_size: 5000
-
-  # --------------------------------------------------------
-  # Maximum Retries
-  # --------------------------------------------------------
-  # TR: Discord mesaj gönderimi başarısız olursa kaç kez tekrar denensin?
-  #     0 = tekrar yok
-  #     3 = önerilen değer
-  #
-  # EN: Number of times to retry sending after failure.
-  #     0 = no retry
-  #     3 = recommended
   max_retries: 3
-
-  # --------------------------------------------------------
-  # Retry Interval
-  # --------------------------------------------------------
-  # TR: Retry denemeleri arasında beklenecek saniye miktarı.
-  # EN: Seconds to wait between retry attempts.
   retry_interval: 2
-
-  # --------------------------------------------------------
-  # Rate Limit Wait Time
-  # --------------------------------------------------------
-  # TR: Discord 429 rate-limit hatası verdiğinde kaç saniye beklenmeli?
-  #     Discord genellikle 2–5 saniye ister.
-  #
-  # EN: Seconds to wait after Discord rate-limit error (429).
-  #     Discord usually needs 2–5 seconds.
   rate_limit_wait: 3
 
 
-# ----------------------------------------------------------
-# Debug Mode
-# ----------------------------------------------------------
-# TR: Debug modu aktifken plugin her HTTP isteğini ve yanıtını konsola yazar.
-#     Hataları tespit etmek için kullanışlıdır fakat normal kullanımda kapalı tutun.
-#
-# EN: When enabled, the plugin logs all HTTP requests and responses.
-#     Useful for debugging but should be off in production.
+############################################################
+#                        SIGN LOGGING                      
+############################################################
+
+log-signs: true
+log-signs-to-console: false
+sign-notify: false
+
+
+############################################################
+#                        DEBUG SETTINGS                    
+############################################################
+
 debug: false
