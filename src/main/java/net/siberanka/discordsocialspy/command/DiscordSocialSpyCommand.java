@@ -1,5 +1,6 @@
 package net.siberanka.discordsocialspy.command;
 
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.siberanka.discordsocialspy.DiscordSocialSpyPlugin;
 import net.siberanka.discordsocialspy.util.LanguageManager;
 import org.bukkit.Bukkit;
@@ -14,53 +15,89 @@ public class DiscordSocialSpyCommand implements CommandExecutor, TabCompleter {
 
     private final DiscordSocialSpyPlugin plugin;
     private final LanguageManager lang;
+    private final Map<UUID, Boolean> signNotify;
     private volatile List<String> helpCache = null;
     private volatile boolean cacheBuilding = false;
 
-    public DiscordSocialSpyCommand(DiscordSocialSpyPlugin plugin, LanguageManager lang) {
+    public DiscordSocialSpyCommand(DiscordSocialSpyPlugin plugin, LanguageManager lang, Map<UUID, Boolean> signNotify) {
         this.plugin = plugin;
         this.lang = lang;
+        this.signNotify = signNotify;
+    }
+
+    private void send(CommandSender sender, String key) {
+        String msg = plugin.getConfig().getString("message-prefix") + lang.get(key);
+        sender.sendMessage(MiniMessage.miniMessage().deserialize(msg));
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String lbl, String[] args) {
 
         if (!sender.hasPermission("discordsocialspy.use")) {
-            sender.sendMessage(lang.get("no-permission"));
+            send(sender, "no-permission");
             return true;
         }
 
         if (args.length == 0) {
-            sender.sendMessage(lang.get("help-header"));
-            sender.sendMessage(lang.get("help-reload"));
-            sender.sendMessage(lang.get("help-add"));
-            sender.sendMessage(lang.get("help-remove"));
+            send(sender, "help-header");
+            send(sender, "help-reload");
+            send(sender, "help-add");
+            send(sender, "help-remove");
             return true;
         }
 
         if (args[0].equalsIgnoreCase("reload")) {
 
             if (!sender.hasPermission("discordsocialspy.reload")) {
-                sender.sendMessage(lang.get("no-permission"));
+                send(sender, "no-permission");
                 return true;
             }
 
-            plugin.reload();
+            plugin.reloadAll();
             clearCacheAsync();
-            sender.sendMessage(lang.get("reload-success"));
+            send(sender, "reload-success");
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("sign")) {
+
+            if (!(sender instanceof Player)) {
+                sender.sendMessage("Console cannot toggle sign notifications.");
+                return true;
+            }
+
+            Player p = (Player) sender;
+
+            if (args.length > 1 && args[1].equalsIgnoreCase("toggle")) {
+                UUID id = p.getUniqueId();
+                boolean current = signNotify.getOrDefault(id, plugin.getConfig().getBoolean("sign-notify"));
+                boolean newState = !current;
+
+                signNotify.put(id, newState);
+
+                if (newState) {
+                    send(sender, "sign-notify-enabled");
+                } else {
+                    send(sender, "sign-notify-disabled");
+                }
+
+                return true;
+            }
+
+            sender.sendMessage("Usage: /discordsocialspy sign toggle");
             return true;
         }
 
         if (args[0].equalsIgnoreCase("cmd")) {
 
             if (!sender.hasPermission("discordsocialspy.cmd")) {
-                sender.sendMessage(lang.get("no-permission"));
+                send(sender, "no-permission");
                 return true;
             }
 
             if (args.length < 3) {
-                sender.sendMessage(lang.get("usage-add"));
-                sender.sendMessage(lang.get("usage-remove"));
+                send(sender, "usage-add");
+                send(sender, "usage-remove");
                 return true;
             }
 
@@ -68,7 +105,7 @@ public class DiscordSocialSpyCommand implements CommandExecutor, TabCompleter {
             String input = args[2].toLowerCase(Locale.ROOT).replace("/", "").trim();
 
             if (!input.matches("^[a-zA-Z0-9_-]{1,32}$")) {
-                sender.sendMessage(lang.get("invalid-command-name"));
+                send(sender, "invalid-command-name");
                 return true;
             }
 
@@ -79,38 +116,44 @@ public class DiscordSocialSpyCommand implements CommandExecutor, TabCompleter {
             if (action.equalsIgnoreCase("add")) {
 
                 if (normalized.contains(input)) {
-                    sender.sendMessage(lang.get("already-logged"));
+                    send(sender, "already-logged");
                     return true;
                 }
 
                 normalized.add(input);
                 plugin.getConfig().set("logged-commands", normalized);
                 plugin.saveConfig();
-                plugin.reload();
+                plugin.reloadAll();
                 clearCacheAsync();
 
-                sender.sendMessage(lang.get("added").replace("{cmd}", input));
+                String msg = plugin.getConfig().getString("message-prefix") +
+                        lang.get("added").replace("{cmd}", input);
+
+                sender.sendMessage(MiniMessage.miniMessage().deserialize(msg));
                 return true;
             }
 
             if (action.equalsIgnoreCase("remove")) {
 
                 if (!normalized.contains(input)) {
-                    sender.sendMessage(lang.get("not-logged"));
+                    send(sender, "not-logged");
                     return true;
                 }
 
                 normalized.remove(input);
                 plugin.getConfig().set("logged-commands", normalized);
                 plugin.saveConfig();
-                plugin.reload();
+                plugin.reloadAll();
                 clearCacheAsync();
 
-                sender.sendMessage(lang.get("removed").replace("{cmd}", input));
+                String msg = plugin.getConfig().getString("message-prefix") +
+                        lang.get("removed").replace("{cmd}", input);
+
+                sender.sendMessage(MiniMessage.miniMessage().deserialize(msg));
                 return true;
             }
 
-            sender.sendMessage(lang.get("invalid-usage"));
+            send(sender, "invalid-usage");
             return true;
         }
 
@@ -157,7 +200,10 @@ public class DiscordSocialSpyCommand implements CommandExecutor, TabCompleter {
 
         if (helpCache == null && !cacheBuilding) rebuildCacheAsync();
 
-        if (args.length == 1) return Arrays.asList("reload", "cmd");
+        if (args.length == 1) return Arrays.asList("reload", "cmd", "sign");
+
+        if (args.length == 2 && args[0].equalsIgnoreCase("sign"))
+            return Collections.singletonList("toggle");
 
         if (args.length == 2 && args[0].equalsIgnoreCase("cmd"))
             return Arrays.asList("add", "remove");
