@@ -5,9 +5,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 public class LanguageManager {
 
@@ -28,17 +28,17 @@ public class LanguageManager {
         File langFile = new File(langFolder, code + ".yml");
 
         if (!langFile.exists()) {
-            if (!copyDefault(code)) {
-                plugin.getLogger().warning("Language file not found, using EN fallback.");
-                copyDefault("en");
-                langFile = new File(langFolder, "en.yml");
-            }
+            copyDefault(code);
+        }
+
+        if (!langFile.exists()) {
+            copyDefault("en");
+            langFile = new File(langFolder, "en.yml");
         }
 
         String content = readFile(langFile);
 
         if (!isValidYaml(content)) {
-            plugin.getLogger().warning("Language file " + code + " is corrupted. Falling back to EN.");
             copyDefault("en");
             langFile = new File(langFolder, "en.yml");
         }
@@ -46,13 +46,7 @@ public class LanguageManager {
         lang = new YamlConfiguration();
         try {
             lang.load(langFile);
-        } catch (Exception e) {
-            plugin.getLogger().warning("Failed to load " + code + ".yml. Falling back to EN.");
-            copyDefault("en");
-            try {
-                lang.load(new File(langFolder, "en.yml"));
-            } catch (Exception ignored) {}
-        }
+        } catch (Exception ignored) {}
     }
 
     public String get(String key) {
@@ -60,20 +54,15 @@ public class LanguageManager {
         return lang.getString(key, key);
     }
 
-    private boolean copyDefault(String code) {
+    private void copyDefault(String code) {
         try {
             InputStream in = plugin.getResource("lang/" + code + ".yml");
-            if (in == null) return false;
+            if (in == null) return;
 
-            File target = new File(plugin.getDataFolder() + "/lang", code + ".yml");
-            Files.copy(in, target.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            File out = new File(plugin.getDataFolder() + "/lang", code + ".yml");
+            Files.copy(in, out.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-            return true;
-
-        } catch (Exception e) {
-            plugin.getLogger().warning("Failed to copy default language file: " + code);
-            return false;
-        }
+        } catch (Exception ignored) {}
     }
 
     private String readFile(File f) {
