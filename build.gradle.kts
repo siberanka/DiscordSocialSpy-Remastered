@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "net.siberanka"
-version = "1.2"
+version = "1.3"
 
 java {
     toolchain {
