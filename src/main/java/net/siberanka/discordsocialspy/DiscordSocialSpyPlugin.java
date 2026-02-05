@@ -14,15 +14,17 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
 
     private AsyncDispatcher dispatcher;
     private LanguageManager lang;
 
-    private final Map<UUID, String> lastMessage = new HashMap<>();
-    private final Map<UUID, Integer> repeatCount = new HashMap<>();
-    private final Map<UUID, Boolean> spamWarned = new HashMap<>();
-    private final Map<UUID, Boolean> signNotify = new HashMap<>();
+    private final Map<UUID, String> lastMessage = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> repeatCount = new ConcurrentHashMap<>();
+    private final Map<UUID, Boolean> spamWarned = new ConcurrentHashMap<>();
+    private final Map<UUID, Boolean> signNotify = new ConcurrentHashMap<>();
 
     @Override
     public void onEnable() {
@@ -41,8 +43,7 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
                 getConfig().getInt("async.queue_size"),
                 getConfig().getInt("async.max_retries"),
                 getConfig().getInt("async.retry_interval"),
-                getConfig().getInt("async.rate_limit_wait")
-        );
+                getConfig().getInt("async.rate_limit_wait"));
 
         loadConfigValues();
 
@@ -72,7 +73,8 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        if (dispatcher != null) dispatcher.shutdown();
+        if (dispatcher != null)
+            dispatcher.shutdown();
     }
 
     public void reloadAll() {
@@ -90,9 +92,11 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
 
         for (String cmd : getConfig().getStringList("logged-commands")) {
 
-            if (!root.equals(cmd.toLowerCase(Locale.ROOT))) continue;
+            if (!root.equals(cmd.toLowerCase(Locale.ROOT)))
+                continue;
 
-            if (player.hasPermission(getConfig().getString("exclude-permission"))) return;
+            if (player.hasPermission(getConfig().getString("exclude-permission")))
+                return;
 
             UUID id = player.getUniqueId();
             String last = lastMessage.getOrDefault(id, null);
@@ -106,8 +110,7 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
                     if (!spamWarned.getOrDefault(id, false)) {
                         getLogger().warning(
                                 getConfig().getString("message-prefix") +
-                                lang.get("spam-warning").replace("{player}", player.getName())
-                        );
+                                        lang.get("spam-warning").replace("{player}", player.getName()));
                         spamWarned.put(id, true);
                     }
                     return;

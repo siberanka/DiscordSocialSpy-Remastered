@@ -111,7 +111,8 @@ public class DiscordSocialSpyCommand implements CommandExecutor, TabCompleter {
 
             List<String> list = plugin.getConfig().getStringList("logged-commands");
             List<String> normalized = new ArrayList<>();
-            for (String s : list) normalized.add(s.trim());
+            for (String s : list)
+                normalized.add(s.trim());
 
             if (action.equalsIgnoreCase("add")) {
 
@@ -168,7 +169,8 @@ public class DiscordSocialSpyCommand implements CommandExecutor, TabCompleter {
 
     private void rebuildCacheAsync() {
 
-        if (cacheBuilding) return;
+        if (cacheBuilding)
+            return;
         cacheBuilding = true;
 
         CompletableFuture.supplyAsync(() -> {
@@ -178,29 +180,34 @@ public class DiscordSocialSpyCommand implements CommandExecutor, TabCompleter {
 
             for (HelpTopic topic : topics) {
                 String name = topic.getName().replace("/", "").trim().toLowerCase(Locale.ROOT);
-                if (!name.matches("^[a-zA-Z0-9_-]{1,32}$")) continue;
+                if (!name.matches("^[a-zA-Z0-9_-]{1,32}$"))
+                    continue;
                 result.add(name);
             }
 
             return result;
 
-        }).thenAcceptAsync(list -> {
-
-            helpCache = list;
-            cacheBuilding = false;
-
-        }, Bukkit.getScheduler().getMainThreadExecutor(plugin));
+        }).thenAccept(list -> {
+            Bukkit.getGlobalRegionScheduler().run(plugin, task -> {
+                helpCache = list;
+                cacheBuilding = false;
+            });
+        });
     }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
 
-        if (!(sender instanceof Player)) return Collections.emptyList();
-        if (!sender.hasPermission("discordsocialspy.use")) return Collections.emptyList();
+        if (!(sender instanceof Player))
+            return Collections.emptyList();
+        if (!sender.hasPermission("discordsocialspy.use"))
+            return Collections.emptyList();
 
-        if (helpCache == null && !cacheBuilding) rebuildCacheAsync();
+        if (helpCache == null && !cacheBuilding)
+            rebuildCacheAsync();
 
-        if (args.length == 1) return Arrays.asList("reload", "cmd", "sign");
+        if (args.length == 1)
+            return Arrays.asList("reload", "cmd", "sign");
 
         if (args.length == 2 && args[0].equalsIgnoreCase("sign"))
             return Collections.singletonList("toggle");
@@ -215,22 +222,26 @@ public class DiscordSocialSpyCommand implements CommandExecutor, TabCompleter {
 
             List<String> logged = plugin.getConfig().getStringList("logged-commands");
             List<String> normalized = new ArrayList<>();
-            for (String s : logged) normalized.add(s.trim());
+            for (String s : logged)
+                normalized.add(s.trim());
 
             if (mode.equals("remove")) {
                 List<String> result = new ArrayList<>();
                 for (String name : normalized)
-                    if (name.startsWith(start)) result.add(name);
+                    if (name.startsWith(start))
+                        result.add(name);
                 return result;
             }
 
             if (mode.equals("add")) {
 
-                if (helpCache == null) return Collections.singletonList(lang.get("loading"));
+                if (helpCache == null)
+                    return Collections.singletonList(lang.get("loading"));
 
                 List<String> result = new ArrayList<>();
                 for (String name : helpCache)
-                    if (!normalized.contains(name) && name.startsWith(start)) result.add(name);
+                    if (!normalized.contains(name) && name.startsWith(start))
+                        result.add(name);
 
                 return result;
             }

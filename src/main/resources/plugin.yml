@@ -2,6 +2,7 @@ name: DiscordSocialSpy
 version: 1.3
 main: net.siberanka.discordsocialspy.DiscordSocialSpyPlugin
 api-version: 1.16
+folia-supported: true
 commands:
   discordsocialspy:
     description: Main command for DiscordSocialSpy

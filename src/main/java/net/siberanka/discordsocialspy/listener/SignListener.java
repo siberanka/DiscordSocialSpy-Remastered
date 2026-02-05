@@ -8,6 +8,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Location;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.SignChangeEvent;
@@ -49,8 +50,10 @@ public class SignListener implements Listener {
             oldLines[i] = oldSign.getLine(i) == null ? "" : oldSign.getLine(i);
             newLines[i] = event.getLine(i) == null ? "" : event.getLine(i);
 
-            if (!oldLines[i].isEmpty()) allOldEmpty = false;
-            if (!newLines[i].isEmpty()) allNewEmpty = false;
+            if (!oldLines[i].isEmpty())
+                allOldEmpty = false;
+            if (!newLines[i].isEmpty())
+                allNewEmpty = false;
 
             if (!oldLines[i].equals(newLines[i])) {
                 edited[i] = true;
@@ -104,8 +107,7 @@ public class SignListener implements Listener {
                 desc.toString(),
                 locationString,
                 true,
-                timestamp
-        );
+                timestamp);
 
         if (plugin.getConfig().getBoolean("log-signs-to-console")) {
 
@@ -118,42 +120,44 @@ public class SignListener implements Listener {
             }
         }
 
-        for (Player p : plugin.getServer().getOnlinePlayers()) {
+        boolean finalAllOldEmpty = allOldEmpty;
 
-            if (!p.hasPermission("discordsocialspy.use"))
-                continue;
+        Bukkit.getAsyncScheduler().runNow(plugin, task -> {
+            for (Player p : plugin.getServer().getOnlinePlayers()) {
 
-            if (!signNotify.getOrDefault(p.getUniqueId(), false))
-                continue;
+                if (!p.hasPermission("discordsocialspy.use"))
+                    continue;
 
-            String headerMsg = plugin.getLanguageManager().get("sign-header-staff");
-            String placedMsg = plugin.getLanguageManager().get(headerKey)
-                    .replace("{player}", player.getName())
-                    .replace("{location}", locationString);
+                if (!signNotify.getOrDefault(p.getUniqueId(), false))
+                    continue;
 
-            p.sendMessage(MiniMessage.miniMessage().deserialize(headerMsg));
-            p.sendMessage(MiniMessage.miniMessage().deserialize(placedMsg));
+                String headerMsg = plugin.getLanguageManager().get("sign-header-staff");
+                String placedMsg = plugin.getLanguageManager().get(headerKey)
+                        .replace("{player}", player.getName())
+                        .replace("{location}", locationString);
 
-            for (int i = 0; i < 4; i++) {
-                String raw = newLines[i];
-                String visible = raw.isEmpty() ? " " : raw;
-                String line = plugin.getLanguageManager().get("sign-line")
-                        .replace("{line}", visible + (edited[i] && !allOldEmpty ? "*" : ""));
-                p.sendMessage(MiniMessage.miniMessage().deserialize(line));
+                p.sendMessage(MiniMessage.miniMessage().deserialize(headerMsg));
+                p.sendMessage(MiniMessage.miniMessage().deserialize(placedMsg));
+
+                for (int i = 0; i < 4; i++) {
+                    String raw = newLines[i];
+                    String visible = raw.isEmpty() ? " " : raw;
+                    String line = plugin.getLanguageManager().get("sign-line")
+                            .replace("{line}", visible + (edited[i] && !finalAllOldEmpty ? "*" : ""));
+                    p.sendMessage(MiniMessage.miniMessage().deserialize(line));
+                }
+
+                Component teleport = MiniMessage.miniMessage().deserialize(
+                        plugin.getLanguageManager().get("sign-location-click")).clickEvent(
+                                ClickEvent.runCommand("/tp " + p.getName() + " "
+                                        + loc.getBlockX() + " "
+                                        + loc.getBlockY() + " "
+                                        + loc.getBlockZ()))
+                        .hoverEvent(
+                                HoverEvent.showText(Component.text(locationString)));
+
+                p.sendMessage(teleport);
             }
-
-            Component teleport = MiniMessage.miniMessage().deserialize(
-                    plugin.getLanguageManager().get("sign-location-click")
-            ).clickEvent(
-                    ClickEvent.runCommand("/tp " + p.getName() + " "
-                            + loc.getBlockX() + " "
-                            + loc.getBlockY() + " "
-                            + loc.getBlockZ())
-            ).hoverEvent(
-                    HoverEvent.showText(Component.text(locationString))
-            );
-
-            p.sendMessage(teleport);
-        }
+        });
     }
 }
