@@ -91,7 +91,7 @@ public class SignListener implements Listener {
                 .replace("{location}", locationString);
 
         if (blocked) {
-            title = "[BLOCKED] " + title;
+            title = plugin.getLanguageManager().get("prefix-blocked-sign") + title;
         }
 
         StringBuilder desc = new StringBuilder();
