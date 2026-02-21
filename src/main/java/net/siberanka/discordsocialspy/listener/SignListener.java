@@ -61,6 +61,20 @@ public class SignListener implements Listener {
             }
         }
 
+        boolean blocked = false;
+        for (int i = 0; i < 4; i++) {
+            if (plugin.isBlocked(newLines[i])) {
+                blocked = true;
+                break;
+            }
+        }
+
+        if (blocked) {
+            event.setCancelled(true);
+            player.sendMessage(MiniMessage.miniMessage()
+                    .deserialize(plugin.getLanguageManager().get("sign-blocked").replace("&", "§")));
+        }
+
         if (allNewEmpty)
             return;
 
@@ -75,6 +89,10 @@ public class SignListener implements Listener {
                 .get(headerKey)
                 .replace("{player}", player.getName())
                 .replace("{location}", locationString);
+
+        if (blocked) {
+            title = "[BLOCKED] " + title;
+        }
 
         StringBuilder desc = new StringBuilder();
 

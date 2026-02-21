@@ -9,10 +9,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,6 +27,11 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Integer> repeatCount = new ConcurrentHashMap<>();
     private final Map<UUID, Boolean> spamWarned = new ConcurrentHashMap<>();
     private final Map<UUID, Boolean> signNotify = new ConcurrentHashMap<>();
+
+    private boolean filterEnabled = false;
+    private boolean checkChat = false;
+    private final List<Pattern> filterPatterns = new ArrayList<>();
+    private final List<String> filterWords = new ArrayList<>();
 
     @Override
     public void onEnable() {
@@ -69,6 +76,47 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
         dispatcher.setUsername(getConfig().getString("username"));
         dispatcher.setAvatarUrl(getConfig().getString("avatar_url"));
         dispatcher.setSignWebhook(getConfig().getString("sign-webhook"));
+
+        filterEnabled = getConfig().getBoolean("filter.enabled", false);
+        checkChat = getConfig().getBoolean("filter.check-chat", false);
+        filterPatterns.clear();
+        filterWords.clear();
+
+        if (filterEnabled) {
+            List<String> regexes = getConfig().getStringList("filter.regex");
+            for (String regex : regexes) {
+                try {
+                    filterPatterns.add(Pattern.compile(regex));
+                } catch (Exception e) {
+                    getLogger().warning("Invalid regex in filter: " + regex);
+                }
+            }
+
+            List<String> words = getConfig().getStringList("filter.words");
+            for (String w : words) {
+                filterWords.add(w.toLowerCase(Locale.ROOT));
+            }
+        }
+    }
+
+    public boolean isBlocked(String text) {
+        if (!filterEnabled || text == null || text.isEmpty()) {
+            return false;
+        }
+
+        String lowerText = text.toLowerCase(Locale.ROOT);
+        for (String word : filterWords) {
+            if (lowerText.contains(word)) {
+                return true;
+            }
+        }
+
+        for (Pattern pattern : filterPatterns) {
+            if (pattern.matcher(text).find()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -122,9 +170,37 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
                 lastMessage.put(id, msg);
             }
 
+            if (isBlocked(msg)) {
+                event.setCancelled(true);
+                player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                        .deserialize(lang.get("message-blocked").replace("&", "§")));
+                dispatcher.queueTextMessage("[BLOCKED] " + player.getName() + ": " + msg);
+                return;
+            }
+
             // FIXED: correct method name
             dispatcher.queueTextMessage(player.getName() + ": " + msg);
             return;
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onChat(AsyncPlayerChatEvent event) {
+        if (!filterEnabled || !checkChat) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        if (player.hasPermission(getConfig().getString("exclude-permission"))) {
+            return;
+        }
+
+        String msg = event.getMessage();
+        if (isBlocked(msg)) {
+            event.setCancelled(true);
+            player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                    .deserialize(lang.get("message-blocked").replace("&", "§")));
+            dispatcher.queueTextMessage("[BLOCKED CHAT] " + player.getName() + ": " + msg);
         }
     }
 }
