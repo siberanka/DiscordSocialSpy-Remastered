@@ -7,25 +7,32 @@ It sends selected in-game commands (e.g., `/msg`, `/tell`, `/w`) to a Discord ch
 
 ### Features
 - Fully asynchronous webhook delivery (no main-thread lag)
-- Configurable command filters
-- Permission-based player exclusion
+- **Advanced Filtering:** Configurable regex patterns and plaintext word lists
+- **Comprehensive Coverage:** Logs and filters `commands`, `signs`, and regular `chat`
+- Permission-based player exclusion (e.g. `discordspy.bypass`)
 - Built‑in rate‑limit & spam protection
-- Customizable message prefix
+- **Localization:** Fully customizable messages via `tr.yml` and `en.yml`
 - Secure JSON formatting
 - Simple reload command
 
 ### Configuration Example
 ```yaml
 webhook: "YOUR_WEBHOOK_URL"
+sign-webhook: "" # Optional specific webhook for signs
 
 logged-commands:
   - msg
   - tell
-  - w
 
 exclude-permission: "discordspy.bypass"
 
-prefix: "[Spy] "
+filter:
+  enabled: true
+  check-chat: true
+  regex:
+    - "\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?::[0-9]{1,5})?\\b"
+  words:
+    - "badword1"
 ```
 
 ### Command
@@ -45,26 +52,33 @@ DiscordSocialSpy, **Paper 1.21.8+** için geliştirilmiş tamamen asenkron, yük
 Özel komutları (örn: `/msg`, `/tell`, `/w`) Discord kanalına gönderir ve sunucuyu laglandırmaz.
 
 ### Özellikler
-- Tamamen asenkron gönderim sistemi
-- Config üzerinden komut filtresi ayarlanabilir
-- Belirli izinlere sahip oyuncuları hariç tutma
+- Tamamen asenkron gönderim sistemi (sunucuyu yormaz)
+- **Gelişmiş Filtreleme:** Regex (düzenli ifade) desenleri ve düz metin kelime listesi desteği
+- **Kapsamlı Dinleme:** `komut`,`tabela` ve standart `sohbet` için filtreleme yeteneği
+- Belirli izinlere sahip oyuncuları hariç tutma (`discordspy.bypass`)
 - Dahili rate‑limit & spam koruması
-- Özelleştirilebilir prefix
+- **Dil Desteği:** `tr.yml` ve `en.yml` üzerinden uyarı mesajlarını ve prefixleri özelleştirme
 - Güvenli JSON formatlama
 - Kolay yeniden yükleme komutu
 
 ### Config Örneği
 ```yaml
 webhook: "WEBHOOK_URLINIZ"
+sign-webhook: "" # Opsiyonel: Sadece tabelalar için ayrı webhook
 
 logged-commands:
   - msg
   - tell
-  - w
 
 exclude-permission: "discordspy.bypass"
 
-prefix: "[Spy] "
+filter:
+  enabled: true
+  check-chat: true
+  regex:
+    - "\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?::[0-9]{1,5})?\\b"
+  words:
+    - "kufur1"
 ```
 
 ### Komut
