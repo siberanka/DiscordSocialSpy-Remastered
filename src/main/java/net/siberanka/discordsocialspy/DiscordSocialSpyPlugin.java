@@ -172,8 +172,9 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
 
             if (isBlocked(msg)) {
                 event.setCancelled(true);
-                player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                        .deserialize(lang.get("message-blocked").replace("&", "§")));
+                player.sendMessage(
+                        net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacyAmpersand()
+                                .deserialize(lang.get("message-blocked")));
                 dispatcher.queueTextMessage(lang.get("prefix-blocked-cmd") + player.getName() + ": " + msg);
                 return;
             }
@@ -198,8 +199,8 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
         String msg = event.getMessage();
         if (isBlocked(msg)) {
             event.setCancelled(true);
-            player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
-                    .deserialize(lang.get("message-blocked").replace("&", "§")));
+            player.sendMessage(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacyAmpersand()
+                    .deserialize(lang.get("message-blocked")));
             dispatcher.queueTextMessage(lang.get("prefix-blocked-chat") + player.getName() + ": " + msg);
         }
     }

@@ -4,7 +4,7 @@ import net.siberanka.discordsocialspy.DiscordSocialSpyPlugin;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
@@ -71,8 +71,8 @@ public class SignListener implements Listener {
 
         if (blocked) {
             event.setCancelled(true);
-            player.sendMessage(MiniMessage.miniMessage()
-                    .deserialize(plugin.getLanguageManager().get("sign-blocked").replace("&", "§")));
+            player.sendMessage(LegacyComponentSerializer.legacyAmpersand()
+                    .deserialize(plugin.getLanguageManager().get("sign-blocked")));
         }
 
         if (allNewEmpty)
@@ -154,18 +154,18 @@ public class SignListener implements Listener {
                         .replace("{player}", player.getName())
                         .replace("{location}", locationString);
 
-                p.sendMessage(MiniMessage.miniMessage().deserialize(headerMsg));
-                p.sendMessage(MiniMessage.miniMessage().deserialize(placedMsg));
+                p.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(headerMsg));
+                p.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(placedMsg));
 
                 for (int i = 0; i < 4; i++) {
                     String raw = newLines[i];
                     String visible = raw.isEmpty() ? " " : raw;
                     String line = plugin.getLanguageManager().get("sign-line")
                             .replace("{line}", visible + (edited[i] && !finalAllOldEmpty ? "*" : ""));
-                    p.sendMessage(MiniMessage.miniMessage().deserialize(line));
+                    p.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(line));
                 }
 
-                Component teleport = MiniMessage.miniMessage().deserialize(
+                Component teleport = LegacyComponentSerializer.legacyAmpersand().deserialize(
                         plugin.getLanguageManager().get("sign-location-click")).clickEvent(
                                 ClickEvent.runCommand("/tp " + p.getName() + " "
                                         + loc.getBlockX() + " "
