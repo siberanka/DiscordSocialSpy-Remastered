@@ -12,6 +12,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.SignChangeEvent;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.block.sign.SignSide;
 
 import java.util.Map;
 import java.util.UUID;
@@ -37,6 +39,7 @@ public class SignListener implements Listener {
         String world = loc.getWorld() != null ? loc.getWorld().getName() : "world";
 
         Sign oldSign = (Sign) event.getBlock().getState();
+        SignSide oldSide = oldSign.getSide(event.getSide());
 
         String[] oldLines = new String[4];
         String[] newLines = new String[4];
@@ -47,8 +50,11 @@ public class SignListener implements Listener {
         boolean anyChange = false;
 
         for (int i = 0; i < 4; i++) {
-            oldLines[i] = oldSign.getLine(i) == null ? "" : oldSign.getLine(i);
-            newLines[i] = event.getLine(i) == null ? "" : event.getLine(i);
+            Component oldComp = oldSide.line(i);
+            oldLines[i] = oldComp == null ? "" : PlainTextComponentSerializer.plainText().serialize(oldComp);
+
+            Component newComp = event.line(i);
+            newLines[i] = newComp == null ? "" : PlainTextComponentSerializer.plainText().serialize(newComp);
 
             if (!oldLines[i].isEmpty())
                 allOldEmpty = false;
