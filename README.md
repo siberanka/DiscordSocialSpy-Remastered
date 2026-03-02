@@ -29,6 +29,7 @@ exclude-permission: "discordspy.bypass"
 filter:
   enabled: true
   check-chat: true
+  role-uuid: "" # Optional role UUID to ping when regex filter is triggered
   regex:
     - "\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?::[0-9]{1,5})?\\b"
   words:
@@ -75,6 +76,7 @@ exclude-permission: "discordspy.bypass"
 filter:
   enabled: true
   check-chat: true
+  role-uuid: "" # Opsiyonel: Regex filtresine takilinca etiketlenecek rol UUID'si
   regex:
     - "\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?::[0-9]{1,5})?\\b"
   words:

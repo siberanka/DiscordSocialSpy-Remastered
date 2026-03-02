@@ -36,8 +36,7 @@ public class AsyncDispatcher {
             int queueSize,
             int maxRetries,
             int retryInterval,
-            int rateLimitWait
-    ) {
+            int rateLimitWait) {
         this.plugin = plugin;
 
         queue = new LinkedBlockingQueue<>(queueSize);
@@ -81,21 +80,26 @@ public class AsyncDispatcher {
         avatarUrl = v;
     }
 
-
     public void queueTextMessage(String text) {
-        queue.offer(() -> sendTextMessage(prefix + text, webhook));
+        queueTextMessage(text, null);
     }
 
+    public void queueTextMessage(String text, String pingRole) {
+        queue.offer(() -> sendTextMessage(prefix + text, webhook, pingRole));
+    }
 
     public void queueEmbed(String title, String desc, String footer, boolean isSign, long timestamp) {
+        queueEmbed(title, desc, footer, isSign, timestamp, null);
+    }
+
+    public void queueEmbed(String title, String desc, String footer, boolean isSign, long timestamp, String pingRole) {
 
         String targetWebhook = isSign && signWebhook != null && !signWebhook.isEmpty()
                 ? signWebhook
                 : webhook;
 
-        queue.offer(() -> sendEmbed(title, desc, footer, targetWebhook, timestamp));
+        queue.offer(() -> sendEmbed(title, desc, footer, targetWebhook, timestamp, pingRole));
     }
-
 
     private void processQueue() {
 
@@ -110,29 +114,45 @@ public class AsyncDispatcher {
         }
     }
 
+    private void sendTextMessage(String text, String targetWebhook, String pingRole) {
 
-    private void sendTextMessage(String text, String targetWebhook) {
+        if (targetWebhook == null || targetWebhook.isBlank())
+            return;
 
-        if (targetWebhook == null || targetWebhook.isBlank()) return;
+        String content = escape(text);
+        String allowedMentions = "\"allowed_mentions\":{\"parse\":[]}";
+        if (pingRole != null && !pingRole.isBlank()) {
+            content = "<@&" + escape(pingRole) + "> " + content;
+            allowedMentions = "\"allowed_mentions\":{\"roles\":[\"" + escape(pingRole) + "\"]}";
+        }
 
         String json = "{"
-                + "\"content\":\"" + escape(text) + "\","
+                + "\"content\":\"" + content + "\","
                 + "\"username\":\"" + escape(username) + "\","
                 + "\"avatar_url\":\"" + escape(avatarUrl) + "\","
-                + "\"allowed_mentions\":{\"parse\":[]}"
+                + allowedMentions
                 + "}";
 
         sendJSON(json, targetWebhook);
     }
 
+    private void sendEmbed(String title, String desc, String footer, String targetWebhook, long timestamp,
+            String pingRole) {
 
-    private void sendEmbed(String title, String desc, String footer, String targetWebhook, long timestamp) {
-
-        if (targetWebhook == null || targetWebhook.isBlank()) return;
+        if (targetWebhook == null || targetWebhook.isBlank())
+            return;
 
         String isoTime = Instant.ofEpochMilli(timestamp).toString();
 
+        String contentField = "";
+        String allowedMentions = "\"allowed_mentions\":{\"parse\":[]}";
+        if (pingRole != null && !pingRole.isBlank()) {
+            contentField = "\"content\":\"<@&" + escape(pingRole) + ">\",";
+            allowedMentions = "\"allowed_mentions\":{\"roles\":[\"" + escape(pingRole) + "\"]}";
+        }
+
         String json = "{"
+                + contentField
                 + "\"username\":\"" + escape(username) + "\","
                 + "\"avatar_url\":\"" + escape(avatarUrl) + "\","
                 + "\"embeds\":[{"
@@ -141,12 +161,11 @@ public class AsyncDispatcher {
                 + "\"footer\":{\"text\":\"" + escape(footer) + "\"},"
                 + "\"timestamp\":\"" + isoTime + "\""
                 + "}],"
-                + "\"allowed_mentions\":{\"parse\":[]}"
+                + allowedMentions
                 + "}";
 
         sendJSON(json, targetWebhook);
     }
-
 
     private void sendJSON(String json, String targetWebhook) {
 
@@ -174,7 +193,8 @@ public class AsyncDispatcher {
     }
 
     private String escape(String s) {
-        if (s == null) return "";
+        if (s == null)
+            return "";
         return s
                 .replace("\\", "\\\\")
                 .replace("\"", "\\\"")

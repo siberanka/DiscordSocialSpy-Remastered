@@ -68,11 +68,11 @@ public class SignListener implements Listener {
         }
 
         boolean blocked = false;
-        for (int i = 0; i < 4; i++) {
-            if (plugin.isBlocked(newLines[i])) {
-                blocked = true;
-                break;
-            }
+        String blockCause = null;
+        String combinedSignText = String.join("", newLines);
+        blockCause = plugin.getBlockCause(combinedSignText);
+        if (blockCause != null) {
+            blocked = true;
         }
 
         if (blocked) {
@@ -126,12 +126,15 @@ public class SignListener implements Listener {
 
         long timestamp = System.currentTimeMillis();
 
+        String pingRole = "REGEX".equals(blockCause) ? plugin.getConfig().getString("filter.role-uuid", "") : null;
+
         plugin.getDispatcher().queueEmbed(
                 title,
                 desc.toString(),
                 locationString,
                 true,
-                timestamp);
+                timestamp,
+                pingRole);
 
         if (plugin.getConfig().getBoolean("log-signs-to-console")) {
 

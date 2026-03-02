@@ -66,9 +66,14 @@ exclude-permission: "discordspy.bypass"
 filter:
   enabled: true
   check-chat: true
+  role-uuid: ""
+  whitelisted-words:
+    - "play.example.com"
+    - "my.server.ip"
   regex:
     - "(?i)\\b(?:mc|play|oyna|craft)\\.[a-z0-9-]+\\.(?:com|net|org|tc|xyz|me)\\b"
     - "\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?::[0-9]{1,5})?\\b"
+    - "(?i)\\b[a-z0-9-]+\\.[a-z0-9-]+\\.(?:tr|com|net|org|tc|xyz|me|tk|ml|ga|cf|gq|io|gg)\\b"
   words:
     - "amk"
     - "fuck"

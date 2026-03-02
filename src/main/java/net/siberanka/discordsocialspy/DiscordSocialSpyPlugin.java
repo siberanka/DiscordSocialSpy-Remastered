@@ -32,6 +32,8 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
     private boolean checkChat = false;
     private final List<Pattern> filterPatterns = new ArrayList<>();
     private final List<String> filterWords = new ArrayList<>();
+    private final List<String> whitelistedWords = new ArrayList<>();
+    private String filterRoleUuid = "";
 
     @Override
     public void onEnable() {
@@ -81,12 +83,15 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
         checkChat = getConfig().getBoolean("filter.check-chat", false);
         filterPatterns.clear();
         filterWords.clear();
+        whitelistedWords.clear();
+
+        filterRoleUuid = getConfig().getString("filter.role-uuid", "");
 
         if (filterEnabled) {
             List<String> regexes = getConfig().getStringList("filter.regex");
             for (String regex : regexes) {
                 try {
-                    filterPatterns.add(Pattern.compile(regex));
+                    filterPatterns.add(Pattern.compile(regex, Pattern.CASE_INSENSITIVE));
                 } catch (Exception e) {
                     getLogger().warning("Invalid regex in filter: " + regex);
                 }
@@ -96,27 +101,44 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
             for (String w : words) {
                 filterWords.add(w.toLowerCase(Locale.ROOT));
             }
+
+            List<String> whitelist = getConfig().getStringList("filter.whitelisted-words");
+            for (String w : whitelist) {
+                whitelistedWords.add(w.toLowerCase(Locale.ROOT));
+            }
         }
     }
 
-    public boolean isBlocked(String text) {
+    public String getBlockCause(String text) {
         if (!filterEnabled || text == null || text.isEmpty()) {
-            return false;
+            return null;
         }
 
         String lowerText = text.toLowerCase(Locale.ROOT);
+
+        // Whitelist check first
+        for (String whiteWord : whitelistedWords) {
+            if (lowerText.contains(whiteWord)) {
+                return null;
+            }
+        }
+
         for (String word : filterWords) {
             if (lowerText.contains(word)) {
-                return true;
+                return "WORD";
             }
         }
 
         for (Pattern pattern : filterPatterns) {
             if (pattern.matcher(text).find()) {
-                return true;
+                return "REGEX";
             }
         }
-        return false;
+        return null;
+    }
+
+    public boolean isBlocked(String text) {
+        return getBlockCause(text) != null;
     }
 
     @Override
@@ -170,12 +192,14 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
                 lastMessage.put(id, msg);
             }
 
-            if (isBlocked(msg)) {
+            String blockCause = getBlockCause(msg);
+            if (blockCause != null) {
                 event.setCancelled(true);
                 player.sendMessage(
                         net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacyAmpersand()
                                 .deserialize(lang.get("message-blocked")));
-                dispatcher.queueTextMessage(lang.get("prefix-blocked-cmd") + player.getName() + ": " + msg);
+                String pingRole = "REGEX".equals(blockCause) ? filterRoleUuid : null;
+                dispatcher.queueTextMessage(lang.get("prefix-blocked-cmd") + player.getName() + ": " + msg, pingRole);
                 return;
             }
 
@@ -197,11 +221,13 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
         }
 
         String msg = event.getMessage();
-        if (isBlocked(msg)) {
+        String blockCause = getBlockCause(msg);
+        if (blockCause != null) {
             event.setCancelled(true);
             player.sendMessage(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacyAmpersand()
                     .deserialize(lang.get("message-blocked")));
-            dispatcher.queueTextMessage(lang.get("prefix-blocked-chat") + player.getName() + ": " + msg);
+            String pingRole = "REGEX".equals(blockCause) ? filterRoleUuid : null;
+            dispatcher.queueTextMessage(lang.get("prefix-blocked-chat") + player.getName() + ": " + msg, pingRole);
         }
     }
 }
