@@ -10,6 +10,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.SignChangeEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -28,7 +29,7 @@ public class SignListener implements Listener {
         this.signNotify = signNotify;
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSignChange(SignChangeEvent event) {
 
         if (!plugin.getConfig().getBoolean("log-signs", true))
@@ -38,7 +39,15 @@ public class SignListener implements Listener {
         Location loc = event.getBlock().getLocation();
         String world = loc.getWorld() != null ? loc.getWorld().getName() : "world";
 
-        Sign oldSign = (Sign) event.getBlock().getState();
+        // Precaution: use getState(false) to avoid creating an NBT snapshot.
+        // In 1.20+ Paper/Folia, taking a snapshot of a block state during an event
+        // can sometimes corrupt the tile entity metadata on chunk load/unload if not
+        // careful.
+        org.bukkit.block.BlockState state = event.getBlock().getState(false);
+        if (!(state instanceof Sign)) {
+            return;
+        }
+        Sign oldSign = (Sign) state;
         SignSide oldSide = oldSign.getSide(event.getSide());
 
         String[] oldLines = new String[4];
