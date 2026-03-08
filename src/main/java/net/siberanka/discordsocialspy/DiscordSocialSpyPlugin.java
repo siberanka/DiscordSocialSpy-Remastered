@@ -198,7 +198,7 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
                 player.sendMessage(
                         net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacyAmpersand()
                                 .deserialize(lang.get("message-blocked")));
-                String pingRole = "REGEX".equals(blockCause) ? filterRoleUuid : null;
+                String pingRole = filterRoleUuid;
                 dispatcher.queueTextMessage(lang.get("prefix-blocked-cmd") + player.getName() + ": " + msg, pingRole);
                 return;
             }
@@ -226,7 +226,7 @@ public class DiscordSocialSpyPlugin extends JavaPlugin implements Listener {
             event.setCancelled(true);
             player.sendMessage(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacyAmpersand()
                     .deserialize(lang.get("message-blocked")));
-            String pingRole = "REGEX".equals(blockCause) ? filterRoleUuid : null;
+            String pingRole = filterRoleUuid;
             dispatcher.queueTextMessage(lang.get("prefix-blocked-chat") + player.getName() + ": " + msg, pingRole);
         }
     }

@@ -135,7 +135,7 @@ public class SignListener implements Listener {
 
         long timestamp = System.currentTimeMillis();
 
-        String pingRole = "REGEX".equals(blockCause) ? plugin.getConfig().getString("filter.role-uuid", "") : null;
+        String pingRole = blocked ? plugin.getConfig().getString("filter.role-uuid", "") : null;
 
         plugin.getDispatcher().queueEmbed(
                 title,
