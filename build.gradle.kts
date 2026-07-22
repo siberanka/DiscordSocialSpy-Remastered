@@ -41,7 +41,7 @@ dependencies {
     val apiDependency = if (modernApi) {
         "io.papermc.paper:paper-api:26.1.2.build.+"
     } else {
-        "org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT"
+        "org.spigotmc:spigot-api:26.2-R0.1-SNAPSHOT"
     }
     if (modernApi) {
         compileOnly(apiDependency)
