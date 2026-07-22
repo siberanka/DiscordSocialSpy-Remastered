@@ -1,0 +1,88 @@
+# DiscordSocialSpy Remastered
+
+[![CI](https://github.com/siberanka/DiscordSocialSpy-Remastered/actions/workflows/ci.yml/badge.svg)](https://github.com/siberanka/DiscordSocialSpy-Remastered/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/siberanka/DiscordSocialSpy-Remastered/actions/workflows/codeql.yml/badge.svg)](https://github.com/siberanka/DiscordSocialSpy-Remastered/actions/workflows/codeql.yml)
+[![Release](https://img.shields.io/github/v/release/siberanka/DiscordSocialSpy-Remastered?display_name=tag&sort=semver)](https://github.com/siberanka/DiscordSocialSpy-Remastered/releases/latest)
+[![Paper](https://img.shields.io/badge/Paper-1.16.x--26.1.x-2c2f33)](https://papermc.io/software/paper)
+[![Folia](https://img.shields.io/badge/Folia-supported-87c540)](https://papermc.io/software/folia)
+[![Java bytecode](https://img.shields.io/badge/bytecode-Java%2011-f89820)](https://docs.papermc.io/paper/getting-started/)
+
+A lightweight Paper/Folia plugin that audits selected player commands, filters configured chat and sign content, and delivers events to Discord webhooks without blocking a server tick thread.
+
+## Highlights
+
+- One JAR for **Paper/Folia 1.16.x through 26.1.x**.
+- Runtime scheduler detection: Folia entity/global schedulers on modern servers, Bukkit scheduler fallback on legacy Paper.
+- Bounded asynchronous webhook queue with configurable concurrency, retry backoff, Discord `429` handling, timeouts, and graceful shutdown.
+- Command, chat, and front/back sign coverage with permission-based bypass.
+- Literal, whitelist, and guarded regular-expression filtering.
+- Safe Discord JSON encoding, payload limits, disabled implicit mentions, and validated role mentions.
+- Self-healing `config.yml` and language YAML files with atomic writes and timestamped backups.
+- English and Turkish localization.
+
+## Compatibility
+
+The release artifact is compiled to Java 11 bytecode and tested against both API edges. Use the Java runtime required by your Paper version:
+
+| Paper version | Server Java | Validation |
+|---|---:|---|
+| 1.16.1–1.16.4 | 11 | Legacy API/build line |
+| 1.16.5 | 16 | Legacy API/build line |
+| 1.17–1.19.x | 17 | Compatible bytecode/API surface |
+| 1.20–1.21.11 | 21 | Compatible bytecode/API surface |
+| 26.1.x | 25 | Modern API/build line |
+
+Paper’s current JVM requirements are documented in the [Paper getting-started guide](https://docs.papermc.io/paper/getting-started/). Other Bukkit-derived implementations are not release-tested.
+
+## Installation
+
+1. Download `DiscordSocialSpy-2.0.0.jar` from the [latest release](https://github.com/siberanka/DiscordSocialSpy-Remastered/releases/latest).
+2. Place it in the server’s `plugins/` directory.
+3. Start the server once.
+4. Set `webhook` in `plugins/DiscordSocialSpy/config.yml`.
+5. Run `/dss reload` or restart the server.
+
+Never publish a configured webhook URL. Discord webhook URLs contain a secret token.
+
+## Commands and permissions
+
+| Command | Permission | Purpose |
+|---|---|---|
+| `/dss reload` | `discordsocialspy.reload` | Validate and reload configuration/languages asynchronously |
+| `/dss cmd add <command>` | `discordsocialspy.cmd` | Add a command to the audit list |
+| `/dss cmd remove <command>` | `discordsocialspy.cmd` | Remove a command from the audit list |
+| `/dss sign toggle` | `discordsocialspy.notify.sign` | Toggle personal in-game sign notifications |
+
+`discordsocialspy.use` gates the base command. Players with the configured `exclude-permission` (default: `discordspy.bypass`) are excluded from logging and filtering.
+
+## Configuration recovery
+
+On startup and `/dss reload`, the plugin compares YAML values with the bundled schema:
+
+- missing entries are added;
+- unknown entries and incompatible values are corrected;
+- malformed YAML is replaced with a safe default;
+- every correction to an existing file first creates `plugins/DiscordSocialSpy/backups/*.bak`;
+- a semantically correct file is not rewritten, preventing save/reload loops.
+
+Configuration reference and migration details are available in the [wiki](https://github.com/siberanka/DiscordSocialSpy-Remastered/wiki).
+
+## Building
+
+```bash
+# Release artifact: Java 11 bytecode, Spigot 1.16.5 API baseline
+./gradlew clean build
+
+# Source/API compatibility check: Paper 26.1.x on JDK 25
+./gradlew clean build -PapiLine=modern
+```
+
+The release JAR is written to `build/libs/DiscordSocialSpy-2.0.0.jar`.
+
+## Security and support
+
+Review the [security audit](SECURITY-AUDIT.md), [security policy](SECURITY.md), and [contribution guide](CONTRIBUTING.md) before reporting a problem. Please use the structured [issue forms](https://github.com/siberanka/DiscordSocialSpy-Remastered/issues/new/choose) and include the exact Paper build, Java version, plugin version, and a redacted configuration.
+
+## Türkçe
+
+Kurulum, yapılandırma ve sorun giderme belgelerinin Türkçe sürümleri [GitHub Wiki](https://github.com/siberanka/DiscordSocialSpy-Remastered/wiki) içinde yer alır. Webhook adresinizi loglarda, issue içinde veya ekran görüntülerinde paylaşmayın.

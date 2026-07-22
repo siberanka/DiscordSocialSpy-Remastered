@@ -1,0 +1,33 @@
+name: DiscordSocialSpy
+version: "${version}"
+main: net.siberanka.discordsocialspy.DiscordSocialSpyPlugin
+description: Lightweight Discord command, chat, and sign auditing for Paper and Folia.
+author: siberanka
+website: https://github.com/siberanka/DiscordSocialSpy-Remastered
+api-version: "1.16"
+folia-supported: true
+load: POSTWORLD
+
+commands:
+  discordsocialspy:
+    description: Manage DiscordSocialSpy.
+    usage: /<command> <reload|cmd|sign>
+    aliases: [dss]
+    permission: discordsocialspy.use
+
+permissions:
+  discordsocialspy.use:
+    description: Allows access to the DiscordSocialSpy command.
+    default: op
+  discordsocialspy.reload:
+    description: Allows reloading configuration and language files.
+    default: op
+  discordsocialspy.cmd:
+    description: Allows changing the logged command list.
+    default: op
+  discordsocialspy.notify.sign:
+    description: Allows receiving in-game sign notifications.
+    default: op
+  discordspy.bypass:
+    description: Excludes a player from logging and content filtering.
+    default: false
