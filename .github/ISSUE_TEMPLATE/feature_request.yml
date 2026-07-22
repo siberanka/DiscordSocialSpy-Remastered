@@ -1,0 +1,32 @@
+name: Feature request
+description: Propose a focused, production-safe enhancement.
+title: "[Feature]: "
+labels: ["type: enhancement", "status: triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What server-owner or player problem should be solved?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility and performance impact
+      description: Consider Paper 1.16.x–26.1.x, Folia, async work, and migration.
+    validations:
+      required: true
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Breaking change?
+      options: ["No", "Possibly", "Yes"]
+    validations:
+      required: true

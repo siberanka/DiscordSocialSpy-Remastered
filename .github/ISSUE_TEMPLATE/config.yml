@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation and troubleshooting
+    url: https://github.com/siberanka/DiscordSocialSpy-Remastered/wiki
+    about: Check installation, configuration, compatibility, and troubleshooting first.
+  - name: Private security report
+    url: https://github.com/siberanka/DiscordSocialSpy-Remastered/security/advisories/new
+    about: Report vulnerabilities privately; never open a public security issue.

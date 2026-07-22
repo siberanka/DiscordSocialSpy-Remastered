@@ -1,0 +1,67 @@
+############################################################
+#                    DISCORD SOCIAL SPY                     #
+############################################################
+
+# Built-in languages: en, tr. Custom language files may be placed in lang/.
+language: "en"
+
+# Discord webhook settings. The sign webhook falls back to webhook when empty.
+webhook: "PUT_YOUR_DISCORD_WEBHOOK_URL_HERE"
+sign-webhook: ""
+username: "SocialSpy"
+avatar_url: "https://www.spigotmc.org/data/resource_icons/131/131648.jpg"
+
+# Discord and in-game prefixes.
+prefix: "[Spy] "
+message-prefix: "&8[&bDSS&8] &r"
+
+# Commands are matched case-insensitively, with or without a namespace.
+logged-commands:
+  - msg
+  - tell
+  - w
+exclude-permission: "discordspy.bypass"
+
+filter:
+  enabled: true
+  check-chat: true
+  # Numeric Discord role ID to mention for blocked content; empty disables it.
+  role-uuid: ""
+  whitelisted-words:
+    - "play.example.com"
+    - "my.server.ip"
+  regex:
+    - "(?i)\\b(?:mc|play|oyna|craft)\\.[a-z0-9-]+\\.(?:com|net|org|tc|xyz|me)\\b"
+    - "\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?::[0-9]{1,5})?\\b"
+    - "(?i)\\b[a-z0-9-]+\\.[a-z0-9-]+\\.(?:tr|com|net|org|tc|xyz|me|tk|ml|ga|cf|gq|io|gg)\\b"
+  words:
+    - "amk"
+    - "fuck"
+    - "aternos"
+    - "oyna."
+    - "play."
+    - "mc."
+    - "craft."
+    - ":255"
+
+# Webhook work is bounded and never blocks a server tick thread.
+# -1 lets the plugin select a conservative thread count.
+async:
+  sender_threads: -1
+  queue_size: 1024
+  max_retries: 3
+  retry_interval: 2
+  rate_limit_wait: 3
+  request_timeout: 10
+  shutdown_timeout: 5
+
+# Per-player webhook logging burst protection. It does not block player commands.
+rate-limit:
+  capacity: 8
+  refill-per-second: 2.0
+
+log-signs: true
+log-signs-to-console: false
+sign-notify: false
+
+debug: false
