@@ -39,7 +39,7 @@ repositories {
 
 dependencies {
     val apiDependency = if (modernApi) {
-        "io.papermc.paper:paper-api:26.1.2.build.+"
+        "io.papermc.paper:paper-api:26.2.build.102.+"
     } else {
         "org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT"
     }
