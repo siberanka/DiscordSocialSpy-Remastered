@@ -1,3 +1,10 @@
+<!-- DOWNLOAD_BADGES_START -->
+<p align="center">
+  <a href="https://gitlab.com/siberanka/DiscordSocialSpy-Remastered/-/releases/permalink/latest/downloads/plugin.jar"><img alt="Download Paper" src="https://img.shields.io/badge/Download-Paper-2c2f33?logo=gitlab&logoColor=white"></a>
+  <a href="https://gitlab.com/siberanka/DiscordSocialSpy-Remastered/-/releases/permalink/latest/downloads/plugin.jar"><img alt="Download Folia" src="https://img.shields.io/badge/Download-Folia-87c540?logo=gitlab&logoColor=white"></a>
+</p>
+<!-- DOWNLOAD_BADGES_END -->
+
 # DiscordSocialSpy Remastered
 
 [![Paper](https://img.shields.io/badge/Paper-1.16.x--26.1.x-2c2f33)](https://papermc.io/software/paper)
