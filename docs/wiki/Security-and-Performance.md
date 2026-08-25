@@ -20,4 +20,4 @@ Player-level token buckets prevent one client from filling the global queue. UUI
 
 HTTP and runtime YAML I/O never execute on a tick thread. Bukkit/Paper operations return through the global or player-owning scheduler. Reload failure retains the last valid in-memory snapshot.
 
-See [SECURITY-AUDIT.md](https://github.com/siberanka/DiscordSocialSpy-Remastered/blob/main/SECURITY-AUDIT.md) for the full threat analysis.
+See [SECURITY-AUDIT.md](https://gitlab.com/siberanka/DiscordSocialSpy-Remastered/-/blob/main/SECURITY-AUDIT.md) for the full threat analysis.

@@ -3,7 +3,7 @@ version: "${version}"
 main: net.siberanka.discordsocialspy.DiscordSocialSpyPlugin
 description: Lightweight Discord command, chat, and sign auditing for Paper and Folia.
 author: siberanka
-website: https://github.com/siberanka/DiscordSocialSpy-Remastered
+website: https://gitlab.com/siberanka/DiscordSocialSpy-Remastered
 api-version: "1.16"
 folia-supported: true
 load: POSTWORLD

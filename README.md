@@ -1,8 +1,5 @@
 # DiscordSocialSpy Remastered
 
-[![CI](https://github.com/siberanka/DiscordSocialSpy-Remastered/actions/workflows/ci.yml/badge.svg)](https://github.com/siberanka/DiscordSocialSpy-Remastered/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/siberanka/DiscordSocialSpy-Remastered/actions/workflows/codeql.yml/badge.svg)](https://github.com/siberanka/DiscordSocialSpy-Remastered/actions/workflows/codeql.yml)
-[![Release](https://img.shields.io/github/v/release/siberanka/DiscordSocialSpy-Remastered?display_name=tag&sort=semver)](https://github.com/siberanka/DiscordSocialSpy-Remastered/releases/latest)
 [![Paper](https://img.shields.io/badge/Paper-1.16.x--26.1.x-2c2f33)](https://papermc.io/software/paper)
 [![Folia](https://img.shields.io/badge/Folia-supported-87c540)](https://papermc.io/software/folia)
 [![Java bytecode](https://img.shields.io/badge/bytecode-Java%2011-f89820)](https://docs.papermc.io/paper/getting-started/)
@@ -36,7 +33,7 @@ Paper’s current JVM requirements are documented in the [Paper getting-started 
 
 ## Installation
 
-1. Download `DiscordSocialSpy-2.0.0.jar` from the [latest release](https://github.com/siberanka/DiscordSocialSpy-Remastered/releases/latest).
+1. Download `DiscordSocialSpy-2.0.0.jar` from the [latest release](https://gitlab.com/siberanka/DiscordSocialSpy-Remastered/-/releases/permalink/latest).
 2. Place it in the server’s `plugins/` directory.
 3. Start the server once.
 4. Set `webhook` in `plugins/DiscordSocialSpy/config.yml`.
@@ -65,7 +62,7 @@ On startup and `/dss reload`, the plugin compares YAML values with the bundled s
 - every correction to an existing file first creates `plugins/DiscordSocialSpy/backups/*.bak`;
 - a semantically correct file is not rewritten, preventing save/reload loops.
 
-Configuration reference and migration details are available in the [wiki](https://github.com/siberanka/DiscordSocialSpy-Remastered/wiki).
+Configuration reference and migration details are available in the [wiki](https://gitlab.com/siberanka/DiscordSocialSpy-Remastered/-/wikis/home).
 
 ## Building
 
@@ -81,8 +78,8 @@ The release JAR is written to `build/libs/DiscordSocialSpy-2.0.0.jar`.
 
 ## Security and support
 
-Review the [security audit](SECURITY-AUDIT.md), [security policy](SECURITY.md), and [contribution guide](CONTRIBUTING.md) before reporting a problem. Please use the structured [issue forms](https://github.com/siberanka/DiscordSocialSpy-Remastered/issues/new/choose) and include the exact Paper build, Java version, plugin version, and a redacted configuration.
+Review the [security audit](SECURITY-AUDIT.md), [security policy](SECURITY.md), and [contribution guide](CONTRIBUTING.md) before reporting a problem. Please use the structured [issue forms](https://gitlab.com/siberanka/DiscordSocialSpy-Remastered/-/issues/new) and include the exact Paper build, Java version, plugin version, and a redacted configuration.
 
 ## Türkçe
 
-Kurulum, yapılandırma ve sorun giderme belgelerinin Türkçe sürümleri [GitHub Wiki](https://github.com/siberanka/DiscordSocialSpy-Remastered/wiki) içinde yer alır. Webhook adresinizi loglarda, issue içinde veya ekran görüntülerinde paylaşmayın.
+Kurulum, yapılandırma ve sorun giderme belgelerinin Türkçe sürümleri [GitHub Wiki](https://gitlab.com/siberanka/DiscordSocialSpy-Remastered/-/wikis/home) içinde yer alır. Webhook adresinizi loglarda, issue içinde veya ekran görüntülerinde paylaşmayın.
