@@ -7,11 +7,13 @@ import net.siberanka.discordsocialspy.config.YamlConfigManager;
 import net.siberanka.discordsocialspy.listener.SignListener;
 import net.siberanka.discordsocialspy.listener.BookListener;
 import net.siberanka.discordsocialspy.util.ContentFilter;
+import net.siberanka.discordsocialspy.util.CommandTemplate;
 import net.siberanka.discordsocialspy.util.LanguageManager;
 import net.siberanka.discordsocialspy.util.PlayerRateLimiter;
 import net.siberanka.discordsocialspy.util.UpdateChecker;
 import net.siberanka.discordsocialspy.worker.AsyncDispatcher;
 import org.bukkit.ChatColor;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
@@ -185,6 +187,7 @@ public final class DiscordSocialSpyPlugin extends JavaPlugin implements Listener
         if (blocked != null) {
             event.setCancelled(true);
             send(player, language.get("message-blocked"));
+            runBlockedContentCommand(player, "command", snapshot);
             queuePlayerAudit(player, language.get("prefix-blocked-cmd") + player.getName() + ": " + message,
                     snapshot.roleId());
             return;
@@ -206,6 +209,7 @@ public final class DiscordSocialSpyPlugin extends JavaPlugin implements Listener
         Player player = event.getPlayer();
         String playerName = player.getName();
         send(player, language.get("message-blocked"));
+        runBlockedContentCommand(player, "chat", snapshot);
         queuePlayerAudit(player, language.get("prefix-blocked-chat") + playerName + ": " + event.getMessage(),
                 snapshot.roleId());
     }
@@ -231,6 +235,24 @@ public final class DiscordSocialSpyPlugin extends JavaPlugin implements Listener
         if ((previous == 0L || now - previous > 30_000_000_000L) && last.compareAndSet(previous, now)) {
             getLogger().warning(language.get("spam-warning").replace("{player}", player.getName()));
         }
+    }
+
+    public void runBlockedContentCommand(Player player, String trigger, PluginSettings snapshot) {
+        if (!snapshot.commandActionEnabled()) {
+            return;
+        }
+        String command = CommandTemplate.render(snapshot.commandActionTemplate(), player.getName(),
+                snapshot.commandActionTriggerLabel(trigger));
+        if (command.isEmpty()) {
+            return;
+        }
+        scheduler.runGlobal(() -> {
+            try {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+            } catch (RuntimeException failure) {
+                getLogger().warning("Blocked-content command failed safely: " + safeMessage(failure));
+            }
+        });
     }
 
     public void send(CommandSender sender, String message) {

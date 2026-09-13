@@ -6,6 +6,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.Set;
 
@@ -25,6 +26,9 @@ public final class PluginSettings {
     private final boolean checkChat;
     private final boolean checkSigns;
     private final boolean checkBooks;
+    private final boolean commandActionEnabled;
+    private final String commandActionTemplate;
+    private final Map<String, String> commandActionTriggerLabels;
     private final String roleId;
     private final boolean logSigns;
     private final boolean logSignsToConsole;
@@ -68,6 +72,13 @@ public final class PluginSettings {
         checkChat = config.getBoolean("filter.check-chat");
         checkSigns = config.getBoolean("filter.check-signs", true);
         checkBooks = config.getBoolean("filter.check-books", true);
+        commandActionEnabled = config.getBoolean("filter.command-action.enabled", false);
+        commandActionTemplate = config.getString("filter.command-action.command", "");
+        commandActionTriggerLabels = Map.of(
+                "chat", config.getString("filter.command-action.trigger-labels.chat", "sohbet"),
+                "command", config.getString("filter.command-action.trigger-labels.command", "komut"),
+                "sign", config.getString("filter.command-action.trigger-labels.sign", "tabela"),
+                "book", config.getString("filter.command-action.trigger-labels.book", "kitap"));
         roleId = config.getString("filter.role-uuid", "");
         logSigns = config.getBoolean("log-signs", true);
         logSignsToConsole = config.getBoolean("log-signs-to-console", false);
@@ -123,6 +134,11 @@ public final class PluginSettings {
     public boolean checkChat() { return checkChat; }
     public boolean checkSigns() { return checkSigns; }
     public boolean checkBooks() { return checkBooks; }
+    public boolean commandActionEnabled() { return commandActionEnabled; }
+    public String commandActionTemplate() { return commandActionTemplate; }
+    public String commandActionTriggerLabel(String trigger) {
+        return commandActionTriggerLabels.getOrDefault(trigger, trigger);
+    }
     public String roleId() { return roleId; }
     public boolean logSigns() { return logSigns; }
     public boolean logSignsToConsole() { return logSignsToConsole; }

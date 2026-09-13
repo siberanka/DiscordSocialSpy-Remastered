@@ -41,6 +41,7 @@ public final class BookListener implements Listener {
         if (blocked) {
             event.setCancelled(true);
             plugin.send(player, plugin.language().get("book-blocked"));
+            plugin.runBlockedContentCommand(player, "book", settings);
         }
         if (!settings.logBooks() && !blocked) {
             return;

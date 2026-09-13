@@ -74,6 +74,7 @@ class YamlConfigManagerTest {
         legacy.set("filter.words", java.util.Arrays.asList("amk", "fuck", "play.", "custom-block"));
         legacy.set("filter.regex", java.util.Collections.singletonList("legacy-expression"));
         legacy.set("filter.whitelisted-words", java.util.Collections.singletonList("allowed.example.com"));
+        legacy.set("filter.command-action", null);
         Files.writeString(configPath, legacy.saveToString(), StandardCharsets.UTF_8);
 
         manager.updateAll();
@@ -88,6 +89,10 @@ class YamlConfigManagerTest {
                 upgraded.getStringList("filter.whitelisted-words"));
         assertTrue(upgraded.getBoolean("filter.check-books"));
         assertTrue(upgraded.getBoolean("filter.check-signs"));
+        assertFalse(upgraded.getBoolean("filter.command-action.enabled"));
+        assertEquals("warn %player% Uygunsuz %trigger% kullanımı",
+                upgraded.getString("filter.command-action.command"));
+        assertEquals("sohbet", upgraded.getString("filter.command-action.trigger-labels.chat"));
     }
 
     @Test

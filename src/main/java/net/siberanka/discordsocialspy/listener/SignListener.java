@@ -57,6 +57,7 @@ public final class SignListener implements Listener {
         if (blocked) {
             event.setCancelled(true);
             plugin.send(player, plugin.language().get("sign-blocked"));
+            plugin.runBlockedContentCommand(player, "sign", settings);
         }
         if (newEmpty || (!oldEmpty && !changed)) {
             return;

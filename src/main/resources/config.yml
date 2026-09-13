@@ -33,6 +33,16 @@ filter:
   smart-detection: true
   # Numeric Discord role ID to mention for blocked content; empty disables it.
   role-uuid: ""
+  # Optionally run one console command after content is actually blocked.
+  # Placeholders: %player% = player name, %trigger% = localized source label below.
+  command-action:
+    enabled: false
+    command: "warn %player% Uygunsuz %trigger% kullanımı"
+    trigger-labels:
+      chat: "sohbet"
+      command: "komut"
+      sign: "tabela"
+      book: "kitap"
   whitelisted-words:
     - "play.example.com"
     - "my.server.ip"

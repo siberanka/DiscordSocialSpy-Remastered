@@ -23,6 +23,8 @@ server tick thread.
 - Command, chat, front/back sign, and writable-book coverage with permission-based bypass.
 - Unicode-aware banned-word filtering, whitelist exceptions, guarded regex rules, and obfuscated
   domain/IPv4 detection.
+- Optional, default-disabled console command action for blocked chat, commands, signs, and books,
+  with `%player%` and configurable `%trigger%` placeholders.
 - Safe Discord JSON encoding, payload limits, disabled implicit mentions, and validated role mentions.
 - Self-healing `config.yml` and language YAML files with atomic writes and timestamped backups.
 - Startup update checks use GitHub first and the public GitLab mirror as a fallback.

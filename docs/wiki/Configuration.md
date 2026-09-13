@@ -27,6 +27,12 @@ Only HTTPS Discord webhook URLs are accepted. Invalid values are backed up and r
 - `filter.regex`: defense-in-depth Java regex rules with guards against common catastrophic-backtracking
   structures. The defaults cover direct and fragmented domain/IP forms and may be extended.
 - `filter.role-uuid`: 17–20 digit Discord role ID for blocked-content alerts.
+- `filter.command-action.enabled`: runs one server-console command only after content is blocked;
+  disabled by default and never runs for whitelisted or bypass-permission content.
+- `filter.command-action.command`: command template without a required leading slash. `%player%` is
+  replaced with the player name and `%trigger%` with the source label.
+- `filter.command-action.trigger-labels`: configurable labels for `chat`, `command`, `sign`, and
+  `book` (defaults: `sohbet`, `komut`, `tabela`, `kitap`).
 - `log-signs`, `log-books`: send normal sign/book edits to Discord for auditing.
 - `log-signs-to-console`, `log-books-to-console`: optional control-character-safe console copies.
 - `update-check.enabled`: checks GitHub releases first, then uses the GitLab mirror if GitHub cannot be

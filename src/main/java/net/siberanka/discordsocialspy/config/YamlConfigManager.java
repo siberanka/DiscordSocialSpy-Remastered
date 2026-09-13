@@ -169,6 +169,11 @@ public final class YamlConfigManager {
         normalizeString(current, defaults, "prefix", 0, 128, changes);
         normalizeString(current, defaults, "message-prefix", 0, 128, changes);
         normalizeString(current, defaults, "exclude-permission", 1, 128, changes);
+        normalizeCommandTemplate(current, defaults, "filter.command-action.command", changes);
+        normalizeTriggerLabel(current, defaults, "filter.command-action.trigger-labels.chat", changes);
+        normalizeTriggerLabel(current, defaults, "filter.command-action.trigger-labels.command", changes);
+        normalizeTriggerLabel(current, defaults, "filter.command-action.trigger-labels.sign", changes);
+        normalizeTriggerLabel(current, defaults, "filter.command-action.trigger-labels.book", changes);
 
         List<String> commands = normalizedList(current.getList("logged-commands"), 64, COMMAND_NAME, true);
         setIfDifferent(current, "logged-commands", commands, changes);
@@ -282,6 +287,48 @@ public final class YamlConfigManager {
         if (value == null || value.length() < minimum || value.length() > maximum) {
             reset(current, defaults, path, changes);
         }
+    }
+
+    private void normalizeCommandTemplate(YamlConfiguration current, YamlConfiguration defaults,
+            String path, List<String> changes) {
+        String value = current.getString(path);
+        if (value == null || value.isBlank() || value.length() > 512 || containsControlCharacter(value)) {
+            reset(current, defaults, path, changes);
+            return;
+        }
+        String normalized = value.trim();
+        while (normalized.startsWith("/")) {
+            normalized = normalized.substring(1).trim();
+        }
+        if (normalized.isEmpty()) {
+            reset(current, defaults, path, changes);
+        } else if (!normalized.equals(value)) {
+            current.set(path, normalized);
+            changes.add("normalized " + path);
+        }
+    }
+
+    private void normalizeTriggerLabel(YamlConfiguration current, YamlConfiguration defaults,
+            String path, List<String> changes) {
+        String value = current.getString(path);
+        if (value == null || value.isBlank() || value.length() > 32 || containsControlCharacter(value)) {
+            reset(current, defaults, path, changes);
+            return;
+        }
+        String normalized = value.trim();
+        if (!normalized.equals(value)) {
+            current.set(path, normalized);
+            changes.add("normalized " + path);
+        }
+    }
+
+    private static boolean containsControlCharacter(String value) {
+        for (int index = 0; index < value.length(); index++) {
+            if (Character.isISOControl(value.charAt(index))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void validateWebhook(YamlConfiguration current, YamlConfiguration defaults, String path,

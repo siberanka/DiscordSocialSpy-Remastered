@@ -12,6 +12,8 @@ All notable changes follow [Semantic Versioning](https://semver.org/).
 - Expanded default Turkish and English profanity list and focused Discord invite detection.
 - Writable-book filtering and bounded Discord/console auditing, with a dedicated optional webhook.
 - Read-only update checks using GitHub first and the public GitLab mirror as fallback.
+- Optional, default-disabled console command action for blocked chat, commands, signs, and books,
+  with `%player%` and configurable `%trigger%` source labels.
 
 ### Changed
 
