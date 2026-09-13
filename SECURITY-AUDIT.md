@@ -22,7 +22,11 @@ Release: 2.0.0
 
 ## Scope notes
 
-The plugin does not manage inventories, items, economy, databases, custom packets, or GUI sessions, so item-duplication and transaction double-spend paths are not present. It observes and may cancel command/chat/sign events only. Client input is bounded before expensive work, and no player-controlled value is dispatched as a server or operating-system command.
+The plugin does not move inventory items, manage economy, databases, custom packets, or GUI sessions,
+so item-duplication and transaction double-spend paths are not present. It observes and may cancel
+command/chat/sign/book-edit events only; cancelled book edits leave the prior item state untouched.
+Client input is bounded before expensive work, and no player-controlled value is dispatched as a
+server or operating-system command.
 
 ## Validation
 

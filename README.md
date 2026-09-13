@@ -11,17 +11,21 @@
 [![Folia](https://img.shields.io/badge/Folia-supported-87c540)](https://papermc.io/software/folia)
 [![Java bytecode](https://img.shields.io/badge/bytecode-Java%2011-f89820)](https://docs.papermc.io/paper/getting-started/)
 
-A lightweight Paper/Folia plugin that audits selected player commands, filters configured chat and sign content, and delivers events to Discord webhooks without blocking a server tick thread.
+A lightweight Paper/Folia plugin that audits selected player commands and book/sign edits, filters
+configured chat and writable content, and delivers events to Discord webhooks without blocking a
+server tick thread.
 
 ## Highlights
 
 - One JAR for **Paper/Folia 1.16.x through 26.1.x**.
 - Runtime scheduler detection: Folia entity/global schedulers on modern servers, Bukkit scheduler fallback on legacy Paper.
 - Bounded asynchronous webhook queue with configurable concurrency, retry backoff, Discord `429` handling, timeouts, and graceful shutdown.
-- Command, chat, and front/back sign coverage with permission-based bypass.
-- Literal, whitelist, and guarded regular-expression filtering.
+- Command, chat, front/back sign, and writable-book coverage with permission-based bypass.
+- Unicode-aware banned-word filtering, whitelist exceptions, guarded regex rules, and obfuscated
+  domain/IPv4 detection.
 - Safe Discord JSON encoding, payload limits, disabled implicit mentions, and validated role mentions.
 - Self-healing `config.yml` and language YAML files with atomic writes and timestamped backups.
+- Startup update checks use GitHub first and the public GitLab mirror as a fallback.
 - English and Turkish localization.
 
 ## Compatibility
@@ -40,7 +44,7 @@ Paper’s current JVM requirements are documented in the [Paper getting-started 
 
 ## Installation
 
-1. Download `DiscordSocialSpy-2.0.0.jar` from the [latest release](https://gitlab.com/siberanka/DiscordSocialSpy-Remastered/-/releases/permalink/latest).
+1. Download `DiscordSocialSpy-2.0.1.jar` from the [latest release](https://gitlab.com/siberanka/DiscordSocialSpy-Remastered/-/releases/permalink/latest).
 2. Place it in the server’s `plugins/` directory.
 3. Start the server once.
 4. Set `webhook` in `plugins/DiscordSocialSpy/config.yml`.
@@ -64,6 +68,8 @@ Never publish a configured webhook URL. Discord webhook URLs contain a secret to
 On startup and `/dss reload`, the plugin compares YAML values with the bundled schema:
 
 - missing entries are added;
+- required default word/regex protections are merged into legacy filter lists while custom entries and
+  the whitelist are preserved;
 - unknown entries and incompatible values are corrected;
 - malformed YAML is replaced with a safe default;
 - every correction to an existing file first creates `plugins/DiscordSocialSpy/backups/*.bak`;
@@ -81,7 +87,7 @@ Configuration reference and migration details are available in the [wiki](https:
 ./gradlew clean build -PapiLine=modern
 ```
 
-The release JAR is written to `build/libs/DiscordSocialSpy-2.0.0.jar`.
+The release JAR is written to `build/libs/DiscordSocialSpy-2.0.1.jar`.
 
 ## Security and support
 
@@ -89,4 +95,4 @@ Review the [security audit](SECURITY-AUDIT.md), [security policy](SECURITY.md), 
 
 ## Türkçe
 
-Kurulum, yapılandırma ve sorun giderme belgelerinin Türkçe sürümleri [GitHub Wiki](https://gitlab.com/siberanka/DiscordSocialSpy-Remastered/-/wikis/home) içinde yer alır. Webhook adresinizi loglarda, issue içinde veya ekran görüntülerinde paylaşmayın.
+Kurulum, yapılandırma ve sorun giderme belgelerinin Türkçe sürümleri [GitLab Wiki](https://gitlab.com/siberanka/DiscordSocialSpy-Remastered/-/wikis/home) içinde yer alır. Webhook adresinizi loglarda, issue içinde veya ekran görüntülerinde paylaşmayın.

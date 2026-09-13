@@ -1,7 +1,7 @@
 name: DiscordSocialSpy
 version: "${version}"
 main: net.siberanka.discordsocialspy.DiscordSocialSpyPlugin
-description: Lightweight Discord command, chat, and sign auditing for Paper and Folia.
+description: Lightweight Discord command, chat, sign, and book auditing for Paper and Folia.
 author: siberanka
 website: https://gitlab.com/siberanka/DiscordSocialSpy-Remastered
 api-version: "1.16"

@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "net.siberanka"
-version = "2.0.0"
+version = "2.0.1"
 val pluginVersion = version.toString()
 
 val modernApi = providers.gradleProperty("apiLine").orNull == "modern"

@@ -5,9 +5,11 @@ import net.siberanka.discordsocialspy.compat.SchedulerBridge;
 import net.siberanka.discordsocialspy.config.PluginSettings;
 import net.siberanka.discordsocialspy.config.YamlConfigManager;
 import net.siberanka.discordsocialspy.listener.SignListener;
+import net.siberanka.discordsocialspy.listener.BookListener;
 import net.siberanka.discordsocialspy.util.ContentFilter;
 import net.siberanka.discordsocialspy.util.LanguageManager;
 import net.siberanka.discordsocialspy.util.PlayerRateLimiter;
+import net.siberanka.discordsocialspy.util.UpdateChecker;
 import net.siberanka.discordsocialspy.worker.AsyncDispatcher;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -82,10 +84,14 @@ public final class DiscordSocialSpyPlugin extends JavaPlugin implements Listener
 
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(new SignListener(this), this);
+        getServer().getPluginManager().registerEvents(new BookListener(this), this);
         commandHandler.rebuildCommandCache();
 
         getLogger().info("Enabled v" + getDescription().getVersion() + " for Paper 1.16.x-26.1.x"
                 + (scheduler.isFoliaSchedulerAvailable() ? " using Folia-aware schedulers." : " using Bukkit schedulers."));
+        if (settings.updateCheck()) {
+            configurationExecutor.execute(() -> UpdateChecker.check(this, settings.debug()));
+        }
     }
 
     @Override

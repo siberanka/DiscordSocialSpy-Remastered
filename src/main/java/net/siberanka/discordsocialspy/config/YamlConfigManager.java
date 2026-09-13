@@ -34,6 +34,8 @@ public final class YamlConfigManager {
     private static final Pattern SAFE_LANGUAGE = Pattern.compile("[A-Za-z0-9_-]{2,16}");
     private static final Pattern COMMAND_NAME = Pattern.compile("[a-z0-9_:-]{1,64}");
     private static final Pattern ROLE_ID = Pattern.compile("[0-9]{17,20}");
+    private static final Set<String> SUPERSEDED_FILTER_WORDS = Set.of(
+            "oyna.", "play.", "mc.", "craft.", ":255");
 
     private final Plugin plugin;
     private final Path dataDirectory;
@@ -161,6 +163,7 @@ public final class YamlConfigManager {
 
         validateWebhook(current, defaults, "webhook", true, changes);
         validateWebhook(current, defaults, "sign-webhook", false, changes);
+        validateWebhook(current, defaults, "book-webhook", false, changes);
         validateHttpsUrl(current, defaults, "avatar_url", true, changes);
         normalizeString(current, defaults, "username", 1, 80, changes);
         normalizeString(current, defaults, "prefix", 0, 128, changes);
@@ -169,10 +172,19 @@ public final class YamlConfigManager {
 
         List<String> commands = normalizedList(current.getList("logged-commands"), 64, COMMAND_NAME, true);
         setIfDifferent(current, "logged-commands", commands, changes);
-        normalizeList(current, "filter.words", 256, null, false, changes);
+        List<String> words = normalizedList(current.getList("filter.words"), 256, null, false);
+        if (words.removeIf(SUPERSEDED_FILTER_WORDS::contains)) {
+            changes.add("removed superseded broad filter.words entries");
+        }
+        appendMissing(words, normalizedList(defaults.getList("filter.words"), 256, null, false));
+        if (words.size() > 256) {
+            words = new ArrayList<>(words.subList(0, 256));
+        }
+        setIfDifferent(current, "filter.words", words, changes);
         normalizeList(current, "filter.whitelisted-words", 256, null, false, changes);
 
         List<String> regexes = normalizedList(current.getList("filter.regex"), 512, null, false);
+        appendMissing(regexes, normalizedList(defaults.getList("filter.regex"), 512, null, false));
         regexes.removeIf(expression -> {
             try {
                 if (!net.siberanka.discordsocialspy.util.RegexSafety.isSafe(expression)) {
@@ -255,6 +267,13 @@ public final class YamlConfigManager {
             current.set(path, value);
             changes.add("normalized " + path);
         }
+    }
+
+    private static void appendMissing(List<String> target, List<String> requiredDefaults) {
+        LinkedHashSet<String> merged = new LinkedHashSet<>(target);
+        merged.addAll(requiredDefaults);
+        target.clear();
+        target.addAll(merged);
     }
 
     private void normalizeString(YamlConfiguration current, YamlConfiguration defaults, String path,

@@ -14,6 +14,8 @@ The CI legacy lane compiles the release source against Spigot API 1.16.5 using J
 - Legacy Paper: classic Bukkit scheduler is used.
 - Modern double-sided signs: the edited side is read through the sign-side API.
 - Legacy signs: the original four-line sign API is used.
+- Writable books: completed edits and signing are checked through the legacy-compatible Bukkit
+  `PlayerEditBookEvent`; normal content is never cancelled.
 - Player messages: legacy text remains the common transport; clickable teleport help uses the stable Spigot component bridge with a plain-text fallback.
 
 No modern-only class appears in a mandatory legacy class signature, preventing early class-loader failure.

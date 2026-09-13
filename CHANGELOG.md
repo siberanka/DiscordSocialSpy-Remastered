@@ -2,6 +2,26 @@
 
 All notable changes follow [Semantic Versioning](https://semver.org/).
 
+## [2.0.1] - 2026-09-13
+
+### Added
+
+- Smart detection for two-label and multi-label domains, fragmented ad prefixes, obfuscated TLDs,
+  `dot`/`nokta` spellings, and validated IPv4 addresses.
+- Unicode-aware, separator-tolerant matching for configured banned words.
+- Expanded default Turkish and English profanity list and focused Discord invite detection.
+- Writable-book filtering and bounded Discord/console auditing, with a dedicated optional webhook.
+- Read-only update checks using GitHub first and the public GitLab mirror as fallback.
+
+### Changed
+
+- Banned words now use token boundaries, avoiding substring false positives in legitimate words.
+- Whitelisted occurrences are still removed before every filter stage, without hiding other blocked
+  content in the same message.
+- Legacy configs now receive missing required default word/regex rules automatically while retaining
+  custom rules and whitelist values; superseded broad fragments are migrated out.
+- Sign filtering and sign logging can now be enabled independently.
+
 ## [2.0.0] - 2026-07-22
 
 ### Added

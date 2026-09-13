@@ -79,6 +79,18 @@ public final class AsyncDispatcher {
             String roleId) {
         PluginSettings snapshot = settings;
         String target = sign && !snapshot.signWebhook().isEmpty() ? snapshot.signWebhook() : snapshot.webhook();
+        return queueEmbedTo(target, title, description, footer, timestamp, roleId);
+    }
+
+    public boolean queueBookEmbed(String title, String description, String footer, long timestamp, String roleId) {
+        PluginSettings snapshot = settings;
+        String target = snapshot.bookWebhook().isEmpty() ? snapshot.webhook() : snapshot.bookWebhook();
+        return queueEmbedTo(target, title, description, footer, timestamp, roleId);
+    }
+
+    private boolean queueEmbedTo(String target, String title, String description, String footer, long timestamp,
+            String roleId) {
+        PluginSettings snapshot = settings;
         if (target.isEmpty()) {
             return false;
         }

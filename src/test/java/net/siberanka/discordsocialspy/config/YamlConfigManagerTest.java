@@ -11,6 +11,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
+
+import net.siberanka.discordsocialspy.util.RegexSafety;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -59,6 +62,42 @@ class YamlConfigManagerTest {
         manager.updateAll();
         try (java.util.stream.Stream<Path> backups = Files.list(temporaryDirectory.resolve("backups"))) {
             assertEquals(1L, backups.count());
+        }
+    }
+
+    @Test
+    void upgradesLegacyFilterListsWithoutChangingWhitelist() throws Exception {
+        YamlConfigManager manager = new YamlConfigManager(plugin(temporaryDirectory));
+        manager.updateAll();
+        Path configPath = temporaryDirectory.resolve("config.yml");
+        YamlConfiguration legacy = manager.loadConfig();
+        legacy.set("filter.words", java.util.Arrays.asList("amk", "fuck", "play.", "custom-block"));
+        legacy.set("filter.regex", java.util.Collections.singletonList("legacy-expression"));
+        legacy.set("filter.whitelisted-words", java.util.Collections.singletonList("allowed.example.com"));
+        Files.writeString(configPath, legacy.saveToString(), StandardCharsets.UTF_8);
+
+        manager.updateAll();
+        YamlConfiguration upgraded = manager.loadConfig();
+
+        assertTrue(upgraded.getStringList("filter.words").contains("custom-block"));
+        assertTrue(upgraded.getStringList("filter.words").contains("orospu"));
+        assertFalse(upgraded.getStringList("filter.words").contains("play."));
+        assertTrue(upgraded.getStringList("filter.regex").contains("legacy-expression"));
+        assertTrue(upgraded.getStringList("filter.regex").size() > 3);
+        assertEquals(java.util.Collections.singletonList("allowed.example.com"),
+                upgraded.getStringList("filter.whitelisted-words"));
+        assertTrue(upgraded.getBoolean("filter.check-books"));
+        assertTrue(upgraded.getBoolean("filter.check-signs"));
+    }
+
+    @Test
+    void everyBundledRegexIsSafeAndCompilable() throws Exception {
+        YamlConfigManager manager = new YamlConfigManager(plugin(temporaryDirectory));
+        manager.updateAll();
+
+        for (String expression : manager.loadConfig().getStringList("filter.regex")) {
+            assertTrue(RegexSafety.isSafe(expression), () -> "Unsafe bundled regex: " + expression);
+            Pattern.compile(expression);
         }
     }
 

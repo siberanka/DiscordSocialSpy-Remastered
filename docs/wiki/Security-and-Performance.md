@@ -12,12 +12,17 @@ Player-level token buckets prevent one client from filling the global queue. UUI
 - Discord payload fields are truncated to official limits.
 - Implicit mentions are disabled.
 - Explicit role mention IDs are numeric and bounded.
-- Sign/chat/command scan inputs are bounded.
+- Sign/chat/command scan inputs are bounded; books are scanned one bounded page at a time.
+- Book audit output is capped and split into Discord-safe embed sizes.
 - Unsafe regex structures are rejected during config repair.
 - Log messages strip control characters.
 
 ## Thread model
 
 HTTP and runtime YAML I/O never execute on a tick thread. Bukkit/Paper operations return through the global or player-owning scheduler. Reload failure retains the last valid in-memory snapshot.
+
+The optional startup update check performs a bounded read-only request to GitHub Releases. GitLab's
+public release endpoint is contacted only when GitHub is unavailable; no update is downloaded or
+installed automatically.
 
 See [SECURITY-AUDIT.md](https://gitlab.com/siberanka/DiscordSocialSpy-Remastered/-/blob/main/SECURITY-AUDIT.md) for the full threat analysis.

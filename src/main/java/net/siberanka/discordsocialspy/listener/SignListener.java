@@ -35,7 +35,8 @@ public final class SignListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSignChange(SignChangeEvent event) {
         PluginSettings settings = plugin.settings();
-        if (!settings.logSigns()) {
+        if ((!settings.checkSigns() && !settings.logSigns())
+                || event.getPlayer().hasPermission(settings.excludePermission())) {
             return;
         }
 
@@ -51,12 +52,16 @@ public final class SignListener implements Listener {
             changed |= edited[index];
         }
 
-        boolean blocked = settings.contentFilter().find(String.join("\n", newLines)) != null;
+        boolean blocked = settings.checkSigns()
+                && settings.contentFilter().find(String.join("\n", newLines)) != null;
         if (blocked) {
             event.setCancelled(true);
             plugin.send(player, plugin.language().get("sign-blocked"));
         }
         if (newEmpty || (!oldEmpty && !changed)) {
+            return;
+        }
+        if (!settings.logSigns() && !blocked) {
             return;
         }
 
